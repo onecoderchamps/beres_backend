@@ -61,6 +61,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                             memberList.Add(new
                             {
+                                member.IsPayed,
                                 member.IdUser,
                                 member.PhoneNumber,
                                 member.JumlahLot,
