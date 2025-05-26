@@ -28,3 +28,8 @@ public class CreateBannerArisan
     public List<string>? UrlBanner { get; set; }
     public List<string>? UrlDocument { get; set; }
 }
+
+public class CreatePaymentArisan
+{
+    public string? IdTransaksi { get; set; }
+}

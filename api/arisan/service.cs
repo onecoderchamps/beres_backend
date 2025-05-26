@@ -6,6 +6,10 @@ namespace RepositoryPattern.Services.ArisanService
     public class ArisanService : IArisanService
     {
         private readonly IMongoCollection<Arisan> dataUser;
+        private readonly IMongoCollection<Transaksi> dataTransaksi;
+        private readonly IMongoCollection<User> User;
+
+
         private readonly string key;
 
         public ArisanService(IConfiguration configuration)
@@ -13,6 +17,8 @@ namespace RepositoryPattern.Services.ArisanService
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<Arisan>("Arisan");
+            dataTransaksi = database.GetCollection<Transaksi>("Transaksi");
+            User = database.GetCollection<User>("User");
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
         }
         public async Task<Object> Get()
@@ -48,18 +54,118 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<Object> GetById(string id)
+        public async Task<object> GetById(string id, string idUser)
         {
             try
             {
-                var items = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
-                return new { code = 200, data = items, message = "Data Add Complete" };
+                var cekDbArisan = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
+                if (cekDbArisan == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                }
+
+                var now = DateTime.Now;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+                // Filter transaksi berdasarkan: ID Arisan, ID User, Type, dan tanggal
+                var filter = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, id),
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
+                );
+
+                var cekDbPayment = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
+                var sudahBayar = cekDbPayment != null;
+
+                return new
+                {
+                    code = 200,
+                    IsPay = sudahBayar,
+                    message = "Cek pembayaran berhasil."
+                };
             }
             catch (CustomException)
             {
                 throw;
             }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
         }
+
+
+        public async Task<object> PayArisan(CreatePaymentArisan id, string idUser)
+        {
+            try
+            {
+                var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
+                if (cekDbArisan == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                }
+                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
+                if (member == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data member arisan tidak ditemukan.");
+                }
+                if (roleData.Balance < cekDbArisan.TargetAmount * member.JumlahLot)
+                {
+                    throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
+                }
+                // Cek apakah transaksi arisan bulan ini sudah ada
+                var now = DateTime.Now;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                var filter = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbArisan.Id),
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
+                );
+                var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
+                if (existingTransaction != null)
+                {
+                    throw new CustomException(400, "Error", "Transaksi arisan bulan ini sudah ada.");
+                }
+                // Kurangi saldo user
+                roleData.Balance -= cekDbArisan.TargetAmount * member.JumlahLot ?? 0;
+                await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
+                // Buat transaksi baru  
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = idUser,
+                    IdTransaksi = cekDbArisan.Id,
+                    Type = "Arisan",
+                    Nominal = cekDbArisan.TargetAmount * member.JumlahLot,
+                    Ket = "Pembayaran Arisan",
+                    Status = "Expense",
+                    CreatedAt = DateTime.Now
+                };
+                await dataTransaksi.InsertOneAsync(transaksi);
+
+                return new
+                {
+                    code = 200,
+                    message = "Cek pembayaran berhasil."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
         public async Task<object> Post(CreateArisanDto item, string id)
         {
             try

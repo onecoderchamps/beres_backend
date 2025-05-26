@@ -40,12 +40,12 @@ namespace Trasgo.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet("{id}")]
-        public async Task<object> GetById([FromRoute] string id)
+        [HttpGet("Pay/{idArisan}/{idUser}")]
+        public async Task<object> GetById([FromRoute] string idArisan, string idUser)
         {
             try
             {
-                var data = await _IArisanService.GetById(id);
+                var data = await _IArisanService.GetById(idArisan, idUser);
                 return Ok(data);
             }
             catch (CustomException ex)
@@ -70,6 +70,30 @@ namespace Trasgo.Server.Controllers
                 string accessToken = HttpContext.Request.Headers["Authorization"];
                 string idUser = await _ConvertJwt.ConvertString(accessToken);
                 var data = await _IArisanService.Post(item, idUser);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("PayArisan")]
+        public async Task<object> PayArisan([FromBody] CreatePaymentArisan item)
+        {
+            try
+            {
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IArisanService.PayArisan(item, idUser);
                 return Ok(data);
             }
             catch (CustomException ex)
