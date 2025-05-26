@@ -43,6 +43,7 @@ namespace RepositoryPattern.Services.ArisanService
                         SisaSlot = sisaSlot,
                         TargetPay = arisan.TargetAmount,
                         JumlahMember = arisan.MemberArisans?.Count ?? 0,
+                        MemberArisan = arisan.MemberArisans,
                         Status = arisan.IsAvailable
                     };
                 });
