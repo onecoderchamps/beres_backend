@@ -18,19 +18,59 @@ namespace RepositoryPattern.Services.ArisanService
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<Arisan>("Arisan");
             dataTransaksi = database.GetCollection<Transaksi>("Transaksi");
+            
             User = database.GetCollection<User>("User");
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
         }
-        public async Task<Object> Get()
+        public async Task<object> Get()
         {
             try
             {
                 var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
-                var result = items.Select(arisan =>
+                var now = DateTime.Now;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+                var result = new List<object>();
+
+                foreach (var arisan in items)
                 {
                     var totalLotTerpakai = arisan.MemberArisans?.Sum(m => m.JumlahLot) ?? 0;
                     var sisaSlot = arisan.TargetLot - totalLotTerpakai;
-                    return new
+
+                    var memberList = new List<object>();
+                    if (arisan.MemberArisans != null)
+                    {
+                        foreach (var member in arisan.MemberArisans)
+                        {
+                            var filter = Builders<Transaksi>.Filter.And(
+                                Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, arisan.Id),
+                                Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                                Builders<Transaksi>.Filter.Eq(_ => _.IdUser, member.IdUser),
+                                Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
+                                Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
+                            );
+
+                            var user = Builders<User>.Filter.And(
+                                Builders<User>.Filter.Eq(_ => _.Phone, member.IdUser)
+                            );
+
+                            var cekDbPayment = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
+                            var cekUser = await User.Find(user).FirstOrDefaultAsync();
+                            var sudahBayar = cekDbPayment != null;
+
+                            memberList.Add(new
+                            {
+                                member.IdUser,
+                                member.PhoneNumber,
+                                member.JumlahLot,
+                                name = cekUser?.FullName ?? "Unknown",
+                                IsMonthPayed = sudahBayar
+                            });
+                        }
+                    }
+
+                    result.Add(new
                     {
                         Id = arisan.Id,
                         Title = arisan.Title,
@@ -43,10 +83,11 @@ namespace RepositoryPattern.Services.ArisanService
                         SisaSlot = sisaSlot,
                         TargetPay = arisan.TargetAmount,
                         JumlahMember = arisan.MemberArisans?.Count ?? 0,
-                        MemberArisan = arisan.MemberArisans,
+                        MemberArisan = memberList,
                         Status = arisan.IsAvailable
-                    };
-                });
+                    });
+                }
+
                 return new { code = 200, data = result, message = "Data Add Complete" };
             }
             catch (CustomException)
@@ -54,6 +95,7 @@ namespace RepositoryPattern.Services.ArisanService
                 throw;
             }
         }
+
 
         public async Task<Object> GetUser(string idUser)
         {
