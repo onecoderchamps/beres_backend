@@ -151,6 +151,7 @@ namespace RepositoryPattern.Services.AuthService
                     Image = roleData.Image,
                     Email = roleData.Email,
                     IsMember = roleData.IsVerification,
+                    Role = roleData.IdRole,
                 };
                 return new { code = 200, Id = roleData.Id, Data = user };
             }
@@ -172,6 +173,7 @@ namespace RepositoryPattern.Services.AuthService
         public string? Image { get; set; }
         public string? Email { get; set; }
         public bool? IsMember { get; set; }
+        public string? Role { get; set; }
 
 
     }
