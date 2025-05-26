@@ -1,5 +1,5 @@
 using MongoDB.Driver;
-using Trasgo.Shared.Models;
+using Beres.Shared.Models;
 
 namespace RepositoryPattern.Services.AttachmentService
 {

@@ -71,3 +71,4 @@
 /home/hilmanzu/Documents/beres/beresbackend/bin/Debug/net8.0/System.Management.dll
 /home/hilmanzu/Documents/beres/beresbackend/bin/Debug/net8.0/ZstdSharp.dll
 /home/hilmanzu/Documents/beres/beresbackend/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Management.dll
+/home/hilmanzu/Documents/beres/beresbackend/obj/Debug/net8.0/beresbackend.sourcelink.json

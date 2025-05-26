@@ -1,6 +1,6 @@
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Trasgo.Shared.Models
+namespace Beres.Shared.Models
 {
     public class BaseModel
     {
@@ -11,7 +11,9 @@ namespace Trasgo.Shared.Models
         [BsonElement("IsActive")]
         public bool? IsActive { get; set; }
         [BsonElement("IsVerification")]
-        public bool? IsVerification {get; set;}
+        public bool? IsVerification { get; set; }
+        [BsonElement("IsPromo")]
+        public bool? IsPromo {get; set;}
 
     }
 }

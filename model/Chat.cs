@@ -1,6 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using Trasgo.Shared.Models;
+using Beres.Shared.Models;
 
 public class ChatModel : BaseModel
 {

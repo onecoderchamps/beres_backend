@@ -1,6 +1,6 @@
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Trasgo.Shared.Models
+namespace Beres.Shared.Models
 {
     public class Attachments : BaseModelUser
     {

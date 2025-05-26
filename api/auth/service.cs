@@ -8,7 +8,7 @@ using CheckId;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
-using Trasgo.Shared.Models;
+using Beres.Shared.Models;
 
 namespace RepositoryPattern.Services.AuthService
 {

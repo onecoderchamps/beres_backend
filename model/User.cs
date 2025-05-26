@@ -1,7 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Trasgo.Shared.Models
+namespace Beres.Shared.Models
 {
     public class User : BaseModel
     {
