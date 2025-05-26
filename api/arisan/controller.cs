@@ -7,7 +7,7 @@ namespace Trasgo.Server.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("/[controller]")]
+    [Route("api/v1/Arisan")]
     public class ArisanController : ControllerBase
     {
         private readonly IArisanService _IArisanService;
