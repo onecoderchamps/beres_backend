@@ -54,6 +54,51 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
+        public async Task<Object> GetUser(string idUser)
+        {
+            try
+            {
+                var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
+
+                // Filter hanya arisan yang memiliki member dengan IdUser yang sesuai
+                var filtered = items.Where(arisan =>
+                    arisan.MemberArisans != null &&
+                    arisan.MemberArisans.Any(m => m.IdUser == idUser)
+                );
+
+                var result = filtered.Select(arisan =>
+                {
+                    var totalLotTerpakai = arisan.MemberArisans?.Sum(m => m.JumlahLot) ?? 0;
+                    var sisaSlot = arisan.TargetLot - totalLotTerpakai;
+
+                    return new
+                    {
+                        Id = arisan.Id,
+                        Title = arisan.Title,
+                        Desc = arisan.Description,
+                        Keterangan = arisan.Keterangan,
+                        Banner = arisan.Banner,
+                        Doc = arisan.Document,
+                        TotalPrice = arisan.TargetAmount * arisan.TargetLot,
+                        TotalSlot = arisan.TargetLot,
+                        SisaSlot = sisaSlot,
+                        TargetPay = arisan.TargetAmount,
+                        JumlahMember = arisan.MemberArisans?.Count ?? 0,
+                        Status = arisan.IsAvailable,
+                        MemberArisan = arisan.MemberArisans,
+                        Type = "Arisan",
+                        CreatedAt = arisan.CreatedAt,
+                    };
+                });
+
+                return new { code = 200, data = result, message = "Data berhasil diambil." };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
         public async Task<object> GetById(string id, string idUser)
         {
             try
