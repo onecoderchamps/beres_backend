@@ -59,5 +59,50 @@ namespace Trasgo.Server.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [Authorize]
+        [HttpGet("SettingIuranBulanan")]
+        public async Task<IActionResult> SettingIuranBulanan()
+        {
+            try
+            {
+                var result = await _RekeningService.SettingIuranBulanan();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("SettingIuranTahunan")]
+        public async Task<IActionResult> SettingIuranTahunan()
+        {
+            try
+            {
+                var result = await _RekeningService.SettingIuranTahunan();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("Banner")]
+        public async Task<IActionResult> Banner()
+        {
+            try
+            {
+                var result = await _RekeningService.Banner();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
