@@ -1,22 +1,21 @@
 using MongoDB.Driver;
 using Beres.Shared.Models;
 
-namespace RepositoryPattern.Services.ArisanService
+namespace RepositoryPattern.Services.PatunganService
 {
-    public class ArisanService : IArisanService
+    public class PatunganService : IPatunganService
     {
-        private readonly IMongoCollection<Arisan> dataUser;
+        private readonly IMongoCollection<Patungan> dataUser;
         private readonly IMongoCollection<Transaksi> dataTransaksi;
         private readonly IMongoCollection<User> User;
 
-
         private readonly string key;
 
-        public ArisanService(IConfiguration configuration)
+        public PatunganService(IConfiguration configuration)
         {
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
-            dataUser = database.GetCollection<Arisan>("Arisan");
+            dataUser = database.GetCollection<Patungan>("Patungan");
             dataTransaksi = database.GetCollection<Transaksi>("Transaksi");
 
             User = database.GetCollection<User>("User");
@@ -33,19 +32,19 @@ namespace RepositoryPattern.Services.ArisanService
 
                 var result = new List<object>();
 
-                foreach (var arisan in items)
+                foreach (var Patungan in items)
                 {
-                    var totalLotTerpakai = arisan.MemberArisans?.Sum(m => m.JumlahLot) ?? 0;
-                    var sisaSlot = arisan.TargetLot - totalLotTerpakai;
+                    var totalLotTerpakai = Patungan.MemberPatungans?.Sum(m => m.JumlahLot) ?? 0;
+                    var sisaSlot = Patungan.TargetLot - totalLotTerpakai;
 
                     var memberList = new List<object>();
-                    if (arisan.MemberArisans != null)
+                    if (Patungan.MemberPatungans != null)
                     {
-                        foreach (var member in arisan.MemberArisans)
+                        foreach (var member in Patungan.MemberPatungans)
                         {
                             var filter = Builders<Transaksi>.Filter.And(
-                                Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, arisan.Id),
-                                Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                                Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, Patungan.Id),
+                                Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
                                 Builders<Transaksi>.Filter.Eq(_ => _.IdUser, member.IdUser),
                                 Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                                 Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
@@ -73,19 +72,19 @@ namespace RepositoryPattern.Services.ArisanService
 
                     result.Add(new
                     {
-                        Id = arisan.Id,
-                        Title = arisan.Title,
-                        Desc = arisan.Description,
-                        Keterangan = arisan.Keterangan,
-                        Banner = arisan.Banner,
-                        Doc = arisan.Document,
-                        TotalPrice = arisan.TargetAmount * arisan.TargetLot,
-                        TotalSlot = arisan.TargetLot,
+                        Id = Patungan.Id,
+                        Title = Patungan.Title,
+                        Desc = Patungan.Description,
+                        Keterangan = Patungan.Keterangan,
+                        Banner = Patungan.Banner,
+                        Doc = Patungan.Document,
+                        TotalPrice = Patungan.TargetAmount * Patungan.TargetLot,
+                        TotalSlot = Patungan.TargetLot,
                         SisaSlot = sisaSlot,
-                        TargetPay = arisan.TargetAmount,
-                        JumlahMember = arisan.MemberArisans?.Count ?? 0,
-                        MemberArisan = memberList,
-                        Status = arisan.IsAvailable
+                        TargetPay = Patungan.TargetAmount,
+                        JumlahMember = Patungan.MemberPatungans?.Count ?? 0,
+                        MemberPatungan = memberList,
+                        Status = Patungan.IsAvailable
                     });
                 }
 
@@ -108,18 +107,18 @@ namespace RepositoryPattern.Services.ArisanService
 
                 // var result = new List<object>();
 
-                var totalLotTerpakai = items.MemberArisans?.Sum(m => m.JumlahLot) ?? 0;
+                var totalLotTerpakai = items.MemberPatungans?.Sum(m => m.JumlahLot) ?? 0;
                 var sisaSlot = items.TargetLot - totalLotTerpakai;
 
                 var memberList = new List<dynamic>();
 
-                if (items.MemberArisans != null)
+                if (items.MemberPatungans != null)
                 {
-                    foreach (var member in items.MemberArisans)
+                    foreach (var member in items.MemberPatungans)
                     {
                         var filter = Builders<Transaksi>.Filter.And(
                             Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, items.Id),
-                            Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                            Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
                             Builders<Transaksi>.Filter.Eq(_ => _.IdUser, member.IdUser),
                             Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                             Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
@@ -160,10 +159,10 @@ namespace RepositoryPattern.Services.ArisanService
                     TotalSlot = items.TargetLot,
                     SisaSlot = sisaSlot,
                     TargetPay = items.TargetAmount,
-                    JumlahMember = items.MemberArisans?.Count ?? 0,
-                    MemberArisan = memberList,
+                    JumlahMember = items.MemberPatungans?.Count ?? 0,
+                    MemberPatungan = memberList,
                     Status = items.IsAvailable,
-                    Type = "Arisan",
+                    Type = "Patungan",
                     CreatedAt = items.CreatedAt,
                     StatusMember = new
                     {
@@ -187,34 +186,34 @@ namespace RepositoryPattern.Services.ArisanService
             {
                 var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
 
-                // Filter hanya arisan yang memiliki member dengan IdUser yang sesuai
-                var filtered = items.Where(arisan =>
-                    arisan.MemberArisans != null &&
-                    arisan.MemberArisans.Any(m => m.IdUser == idUser)
+                // Filter hanya Patungan yang memiliki member dengan IdUser yang sesuai
+                var filtered = items.Where(Patungan =>
+                    Patungan.MemberPatungans != null &&
+                    Patungan.MemberPatungans.Any(m => m.IdUser == idUser)
                 );
 
-                var result = filtered.Select(arisan =>
+                var result = filtered.Select(Patungan =>
                 {
-                    var totalLotTerpakai = arisan.MemberArisans?.Sum(m => m.JumlahLot) ?? 0;
-                    var sisaSlot = arisan.TargetLot - totalLotTerpakai;
+                    var totalLotTerpakai = Patungan.MemberPatungans?.Sum(m => m.JumlahLot) ?? 0;
+                    var sisaSlot = Patungan.TargetLot - totalLotTerpakai;
 
                     return new
                     {
-                        Id = arisan.Id,
-                        Title = arisan.Title,
-                        Desc = arisan.Description,
-                        Keterangan = arisan.Keterangan,
-                        Banner = arisan.Banner,
-                        Doc = arisan.Document,
-                        TotalPrice = arisan.TargetAmount * arisan.TargetLot,
-                        TotalSlot = arisan.TargetLot,
+                        Id = Patungan.Id,
+                        Title = Patungan.Title,
+                        Desc = Patungan.Description,
+                        Keterangan = Patungan.Keterangan,
+                        Banner = Patungan.Banner,
+                        Doc = Patungan.Document,
+                        TotalPrice = Patungan.TargetAmount * Patungan.TargetLot,
+                        TotalSlot = Patungan.TargetLot,
                         SisaSlot = sisaSlot,
-                        TargetPay = arisan.TargetAmount,
-                        JumlahMember = arisan.MemberArisans?.Count ?? 0,
-                        Status = arisan.IsAvailable,
-                        MemberArisan = arisan.MemberArisans,
-                        Type = "Arisan",
-                        CreatedAt = arisan.CreatedAt,
+                        TargetPay = Patungan.TargetAmount,
+                        JumlahMember = Patungan.MemberPatungans?.Count ?? 0,
+                        Status = Patungan.IsAvailable,
+                        MemberPatungan = Patungan.MemberPatungans,
+                        Type = "Patungan",
+                        CreatedAt = Patungan.CreatedAt,
                     };
                 });
 
@@ -230,20 +229,20 @@ namespace RepositoryPattern.Services.ArisanService
         {
             try
             {
-                var cekDbArisan = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
-                if (cekDbArisan == null)
+                var cekDbPatungan = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
 
                 var now = DateTime.Now;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
-                // Filter transaksi berdasarkan: ID Arisan, ID User, Type, dan tanggal
+                // Filter transaksi berdasarkan: ID Patungan, ID User, Type, dan tanggal
                 var filter = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, id),
-                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
                     Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
@@ -269,32 +268,32 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> PayArisan(CreatePaymentArisan id, string idUser)
+        public async Task<object> PayPatungan(CreatePaymentPatungan id, string idUser)
         {
             try
             {
-                var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
-                if (cekDbArisan == null)
+                var cekDbPatungan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
-                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
+                var member = cekDbPatungan.MemberPatungans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
                 if (member == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data member arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data member Patungan tidak ditemukan.");
                 }
-                if (roleData.Balance < cekDbArisan.TargetAmount * member.JumlahLot)
+                if (roleData.Balance < cekDbPatungan.TargetAmount * member.JumlahLot)
                 {
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
                 }
-                // Cek apakah transaksi arisan bulan ini sudah ada
+                // Cek apakah transaksi Patungan bulan ini sudah ada
                 var now = DateTime.Now;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
                 var filter = Builders<Transaksi>.Filter.And(
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbArisan.Id),
-                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbPatungan.Id),
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
                     Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
@@ -302,20 +301,20 @@ namespace RepositoryPattern.Services.ArisanService
                 var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
                 if (existingTransaction != null)
                 {
-                    throw new CustomException(400, "Error", "Transaksi arisan bulan ini sudah ada.");
+                    throw new CustomException(400, "Error", "Transaksi Patungan bulan ini sudah ada.");
                 }
                 // Kurangi saldo user
-                roleData.Balance -= cekDbArisan.TargetAmount * member.JumlahLot ?? 0;
+                roleData.Balance -= cekDbPatungan.TargetAmount * member.JumlahLot ?? 0;
                 await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
                 // Buat transaksi baru  
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
                     IdUser = idUser,
-                    IdTransaksi = cekDbArisan.Id,
-                    Type = "Arisan",
-                    Nominal = cekDbArisan.TargetAmount * member.JumlahLot,
-                    Ket = "Pembayaran Arisan",
+                    IdTransaksi = cekDbPatungan.Id,
+                    Type = "Patungan",
+                    Nominal = cekDbPatungan.TargetAmount * member.JumlahLot,
+                    Ket = "Pembayaran Patungan",
                     Status = "Expense",
                     CreatedAt = DateTime.Now
                 };
@@ -337,28 +336,28 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> PayCompleteArisan(CreatePaymentArisan2 id, string idUser)
+        public async Task<object> PayCompletePatungan(CreatePaymentPatungan2 id, string idUser)
         {
             try
             {
-                var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
-                if (cekDbArisan == null)
+                var cekDbPatungan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
                 if(roleData.IdRole != "2")
                 {
-                    throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran arisan.");
+                    throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran Patungan.");
                 }
-                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive);
+                var member = cekDbPatungan.MemberPatungans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive);
                 if (member == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data member arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data member Patungan tidak ditemukan.");
                 }
                 // Kurangi saldo user
                 member.IsPayed = true;
-                await dataUser.ReplaceOneAsync(x => x.Id == cekDbArisan.Id, cekDbArisan);
+                await dataUser.ReplaceOneAsync(x => x.Id == cekDbPatungan.Id, cekDbPatungan);
 
                 return new
                 {
@@ -376,21 +375,21 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> Post(CreateArisanDto item, string id)
+        public async Task<object> Post(CreatePatunganDto item, string id)
         {
             try
             {
-                // Cek apakah judul arisan sudah digunakan
-                var filter = Builders<Arisan>.Filter.Eq(u => u.Title, item.Title);
-                var existingArisan = await dataUser.Find(filter).SingleOrDefaultAsync();
+                // Cek apakah judul Patungan sudah digunakan
+                var filter = Builders<Patungan>.Filter.Eq(u => u.Title, item.Title);
+                var existingPatungan = await dataUser.Find(filter).SingleOrDefaultAsync();
 
-                if (existingArisan != null)
+                if (existingPatungan != null)
                 {
-                    throw new CustomException(400, "Error", "Nama arisan sudah digunakan.");
+                    throw new CustomException(400, "Error", "Nama Patungan sudah digunakan.");
                 }
 
                 // Mapping DTO ke model
-                var arisanData = new Arisan
+                var PatunganData = new Patungan
                 {
                     Id = Guid.NewGuid().ToString(),
                     IdUser = id,
@@ -401,7 +400,7 @@ namespace RepositoryPattern.Services.ArisanService
                     Document = item.Document?.ToList(),
                     Location = item.Location,
                     TargetLot = item.TargetLot,
-                    MemberArisans = [],
+                    MemberPatungans = [],
                     TargetAmount = item.TargetAmount,
                     PenagihanDate = item.PenagihanDate,
                     IsAvailable = item.IsAvailable,
@@ -412,14 +411,14 @@ namespace RepositoryPattern.Services.ArisanService
                 };
 
                 // Simpan ke database
-                await dataUser.InsertOneAsync(arisanData);
+                await dataUser.InsertOneAsync(PatunganData);
 
                 // Response sukses
                 return new
                 {
                     code = 200,
-                    id = arisanData.Id,
-                    message = "Data arisan berhasil ditambahkan."
+                    id = PatunganData.Id,
+                    message = "Data Patungan berhasil ditambahkan."
                 };
             }
             catch (CustomException)
@@ -433,34 +432,34 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> AddMemberToArisan(CreateMemberArisan newMember)
+        public async Task<object> AddMemberToPatungan(CreateMemberPatungan newMember)
         {
             try
             {
-                // Cek apakah Arisan dengan ID yang diberikan ada
-                var filter = Builders<Arisan>.Filter.Eq(a => a.Id, newMember.IdArisan);
-                var arisan = await dataUser.Find(filter).FirstOrDefaultAsync();
+                // Cek apakah Patungan dengan ID yang diberikan ada
+                var filter = Builders<Patungan>.Filter.Eq(a => a.Id, newMember.IdPatungan);
+                var Patungan = await dataUser.Find(filter).FirstOrDefaultAsync();
 
-                if (arisan == null)
+                if (Patungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
 
                 // Cek apakah member dengan ID atau nomor telepon sudah ada
-                var isExistingMember = arisan.MemberArisans != null && arisan.MemberArisans.Any(m =>
+                var isExistingMember = Patungan.MemberPatungans != null && Patungan.MemberPatungans.Any(m =>
                     m.IdUser == newMember.IdUser || m.PhoneNumber == newMember.PhoneNumber);
 
                 if (isExistingMember)
                 {
-                    throw new CustomException(400, "Error", "Member sudah terdaftar dalam arisan ini.");
+                    throw new CustomException(400, "Error", "Member sudah terdaftar dalam Patungan ini.");
                 }
 
-                await PayArisanFirst(new CreatePaymentArisan
+                await PayPatunganFirst(new CreatePaymentPatungan
                 {
-                    IdTransaksi = newMember.IdArisan
+                    IdTransaksi = newMember.IdPatungan
                 }, newMember.IdUser, newMember.JumlahLot ?? 1);
 
-                var dataArisan = new MemberArisan
+                var dataPatungan = new MemberPatungan
                 {
                     IdUser = newMember.IdUser,
                     PhoneNumber = newMember.PhoneNumber,
@@ -470,13 +469,13 @@ namespace RepositoryPattern.Services.ArisanService
                 };
 
                 // Tambahkan member baru ke list
-                var update = Builders<Arisan>.Update.Push("MemberArisans", dataArisan);
+                var update = Builders<Patungan>.Update.Push("MemberPatungans", dataPatungan);
                 await dataUser.UpdateOneAsync(filter, update);
 
                 return new
                 {
                     code = 200,
-                    message = "Member berhasil ditambahkan ke arisan."
+                    message = "Member berhasil ditambahkan ke Patungan."
                 };
             }
             catch (CustomException)
@@ -489,27 +488,27 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> PayArisanFirst(CreatePaymentArisan id, string idUser, float lot)
+        public async Task<object> PayPatunganFirst(CreatePaymentPatungan id, string idUser, float lot)
         {
             try
             {
-                var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
-                if (cekDbArisan == null)
+                var cekDbPatungan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
-                if (roleData.Balance < cekDbArisan.TargetAmount * lot)
+                if (roleData.Balance < cekDbPatungan.TargetAmount * lot)
                 {
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
                 }
-                // Cek apakah transaksi arisan bulan ini sudah ada
+                // Cek apakah transaksi Patungan bulan ini sudah ada
                 var now = DateTime.Now;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
                 var filter = Builders<Transaksi>.Filter.And(
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbArisan.Id),
-                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Arisan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbPatungan.Id),
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
                     Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
@@ -517,20 +516,20 @@ namespace RepositoryPattern.Services.ArisanService
                 var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
                 if (existingTransaction != null)
                 {
-                    throw new CustomException(400, "Error", "Transaksi arisan bulan ini sudah ada.");
+                    throw new CustomException(400, "Error", "Transaksi Patungan bulan ini sudah ada.");
                 }
                 // Kurangi saldo user
-                roleData.Balance -= cekDbArisan.TargetAmount * lot ?? 0;
+                roleData.Balance -= cekDbPatungan.TargetAmount * lot ?? 0;
                 await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
                 // Buat transaksi baru  
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
                     IdUser = idUser,
-                    IdTransaksi = cekDbArisan.Id,
-                    Type = "Arisan",
-                    Nominal = cekDbArisan.TargetAmount * lot,
-                    Ket = "Pembayaran Arisan",
+                    IdTransaksi = cekDbPatungan.Id,
+                    Type = "Patungan",
+                    Nominal = cekDbPatungan.TargetAmount * lot,
+                    Ket = "Pembayaran Patungan",
                     Status = "Expense",
                     CreatedAt = DateTime.Now
                 };
@@ -552,20 +551,20 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> AddBannerToArisan(CreateBannerArisan newMember)
+        public async Task<object> AddBannerToPatungan(CreateBannerPatungan newMember)
         {
             try
             {
-                // Cek apakah Arisan dengan ID yang diberikan ada
-                var filter = Builders<Arisan>.Filter.Eq(a => a.Id, newMember.IdArisan);
-                var arisan = await dataUser.Find(filter).FirstOrDefaultAsync();
+                // Cek apakah Patungan dengan ID yang diberikan ada
+                var filter = Builders<Patungan>.Filter.Eq(a => a.Id, newMember.IdPatungan);
+                var Patungan = await dataUser.Find(filter).FirstOrDefaultAsync();
 
-                if (arisan == null)
+                if (Patungan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
 
-                var update = Builders<Arisan>.Update
+                var update = Builders<Patungan>.Update
                     .Set(a => a.Banner, newMember.UrlBanner ?? new List<string>())
                     .Set(a => a.Document, newMember.UrlDocument ?? new List<string>());
 
@@ -574,7 +573,7 @@ namespace RepositoryPattern.Services.ArisanService
                 return new
                 {
                     code = 200,
-                    message = "Banner dan document berhasil ditambahkan ke arisan."
+                    message = "Banner dan document berhasil ditambahkan ke Patungan."
                 };
             }
             catch (CustomException)
@@ -587,18 +586,18 @@ namespace RepositoryPattern.Services.ArisanService
             }
         }
 
-        public async Task<object> Put(string id, CreateArisanDto item)
+        public async Task<object> Put(string id, CreatePatunganDto item)
         {
             try
             {
-                var ArisanData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
-                if (ArisanData == null)
+                var PatunganData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (PatunganData == null)
                 {
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
-                ArisanData.Title = item.Title;
-                await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
-                return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Updated" };
+                PatunganData.Title = item.Title;
+                await dataUser.ReplaceOneAsync(x => x.Id == id, PatunganData);
+                return new { code = 200, id = PatunganData.Id.ToString(), message = "Data Updated" };
             }
             catch (CustomException)
             {
@@ -609,14 +608,14 @@ namespace RepositoryPattern.Services.ArisanService
         {
             try
             {
-                var ArisanData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
-                if (ArisanData == null)
+                var PatunganData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (PatunganData == null)
                 {
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
-                ArisanData.IsActive = false;
-                await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
-                return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Deleted" };
+                PatunganData.IsActive = false;
+                await dataUser.ReplaceOneAsync(x => x.Id == id, PatunganData);
+                return new { code = 200, id = PatunganData.Id.ToString(), message = "Data Deleted" };
             }
             catch (CustomException)
             {

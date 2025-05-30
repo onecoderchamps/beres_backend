@@ -13,6 +13,7 @@ using RepositoryPattern.Services.RoleService;
 using RepositoryPattern.Services.ArisanService;
 using RepositoryPattern.Services.RekeningService;
 using RepositoryPattern.Services.ChatService;
+using RepositoryPattern.Services.PatunganService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,8 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IArisanService, ArisanService>();
+builder.Services.AddScoped<IPatunganService, PatunganService>();
+
 builder.Services.AddScoped<IRekeningService, RekeningService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 
