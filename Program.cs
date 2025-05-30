@@ -11,6 +11,7 @@ using RepositoryPattern.Services.AuthService;
 using RepositoryPattern.Services.AttachmentService;
 using RepositoryPattern.Services.RoleService;
 using RepositoryPattern.Services.ArisanService;
+using RepositoryPattern.Services.RekeningService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,8 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IArisanService, ArisanService>();
+builder.Services.AddScoped<IRekeningService, RekeningService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
