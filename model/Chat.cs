@@ -12,9 +12,6 @@ public class ChatModel : BaseModel
 
     [BsonElement("IdUser")]
     public string? IdUser { get; set; }
-
-    [BsonElement("IdDriver")]
-    public string? IdDriver { get; set; }
     [BsonElement("Sender")]
     public string? Sender { get; set; }
 
@@ -22,4 +19,6 @@ public class ChatModel : BaseModel
     public string? Message { get; set; }
     [BsonElement("Image")]
     public string? Image { get; set; }
+    [BsonElement("Name")]
+    public string? Name { get; set; }
 }
