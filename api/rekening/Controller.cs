@@ -44,5 +44,20 @@ namespace Trasgo.Server.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [Authorize]
+        [HttpGet("SettingPatungan")]
+        public async Task<IActionResult> SettingPatungan()
+        {
+            try
+            {
+                var result = await _RekeningService.SettingPatungan();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

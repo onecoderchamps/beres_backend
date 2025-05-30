@@ -60,6 +60,24 @@ namespace RepositoryPattern.Services.RekeningService
             }
         }
 
+        public async Task<object> SettingPatungan()
+        {
+            try
+            {
+                var Bank = await _settingCollection.Find(d => d.Key == "SettingPatungan").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+                return new
+                {
+                    code = 200,
+                    Message = "Berhasil",
+                    Data = Bank.Value
+                };
+            }
+            catch (Exception)
+            {
+                throw new CustomException(400, "Message", "Failed to send Rekening email");
+            }
+        }
+
         public class sendForm
         {
             public string? Id { get; set; }
