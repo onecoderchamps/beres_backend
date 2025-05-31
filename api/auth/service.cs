@@ -15,7 +15,9 @@ namespace RepositoryPattern.Services.AuthService
     public class AuthService : IAuthService
     {
         private readonly IMongoCollection<User> dataUser;
-        private readonly IMongoCollection<OtpModel> dataOtp;
+        private readonly IMongoCollection<Transaksi> Transaksi;
+        private readonly IMongoCollection<Setting3> Setting;
+
         private readonly string key;
         private readonly ILogger<AuthService> _logger;
 
@@ -24,7 +26,9 @@ namespace RepositoryPattern.Services.AuthService
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<User>("User");
-            dataOtp = database.GetCollection<OtpModel>("OTP");
+            Transaksi = database.GetCollection<Transaksi>("Transaksi");
+            Setting = database.GetCollection<Setting3>("Setting");
+
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
             _logger = logger;
         }
@@ -76,9 +80,48 @@ namespace RepositoryPattern.Services.AuthService
         {
             try
             {
+                var Bank = await Setting.Find(d => d.Key == "IuranTahunan").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var roleData = await dataUser.Find(x => x.Phone == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data tidak ada");
+                if (roleData.Balance < Bank.Value)
+                {
+                    throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
+                }
+                // Cek apakah transaksi koperasi tahunan tahun ini sudah ada
+                var now = DateTime.Now;
+                var startOfYear = new DateTime(now.Year, 1, 1);
+                var endOfYear = new DateTime(now.Year, 12, 31, 23, 59, 59);
+
+                var filter = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiTahunan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfYear),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
+                );
+
+                var existingTransaction = await Transaksi.Find(filter).FirstOrDefaultAsync();
+                if (existingTransaction != null)
+                {
+                    throw new CustomException(400, "Error", "Transaksi koperasi tahunan tahun ini sudah ada.");
+                }
+
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = roleData.Phone,
+                    IdTransaksi = Guid.NewGuid().ToString(),
+                    Type = "KoperasiTahunan",
+                    Nominal = Bank.Value,
+                    Ket = "Iuran Tahunan Koperasi",
+                    Status = "Expense",
+                    CreatedAt = DateTime.Now
+                };
+                await Transaksi.InsertOneAsync(transaksi);
+
+                roleData.Balance -= Bank.Value;
                 roleData.FullName = item.FullName;
                 roleData.Email = item.Email;
+                roleData.Address = item.Address;
+                roleData.NoNIK = item.NoNIK;
                 await dataUser.ReplaceOneAsync(x => x.Phone == id, roleData);
                 return new { code = 200, Message = "Update Berhasil" };
             }
@@ -141,6 +184,19 @@ namespace RepositoryPattern.Services.AuthService
             try
             {
                 var roleData = await dataUser.Find(x => x.Phone == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                // Cek apakah transaksi koperasi tahunan tahun ini sudah ada
+                var now = DateTime.Now;
+                var startOfYear = new DateTime(now.Year, 1, 1);
+                var endOfYear = new DateTime(now.Year, 12, 31, 23, 59, 59);
+
+                var filter = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiTahunan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfYear),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
+                );
+
+                var existingTransaction = await Transaksi.Find(filter).FirstOrDefaultAsync();
                 var user = new ModelViewUser
                 {
                     Phone = roleData.Phone,
@@ -150,7 +206,7 @@ namespace RepositoryPattern.Services.AuthService
                     Fcm = roleData.Fcm,
                     Image = roleData.Image,
                     Email = roleData.Email,
-                    IsMember = roleData.IsVerification,
+                    IsMember = existingTransaction != null,
                     Role = roleData.IdRole,
                 };
                 return new { code = 200, Id = roleData.Id, Data = user };

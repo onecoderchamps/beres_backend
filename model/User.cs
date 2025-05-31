@@ -33,6 +33,11 @@ namespace Beres.Shared.Models
         [BsonElement("Balance")]
         public float? Balance {get; set;}
 
+        [BsonElement("NoNIK")]
+        public string? NoNIK {get; set;}
+        [BsonElement("Address")]
+        public string? Address {get; set;}
+
         [BsonElement("Point")]
         public float? Point {get; set;}
 

@@ -109,6 +109,8 @@ namespace RepositoryPattern.Services.OtpService
                     Balance = 0,
                     Point = 0,
                     Fcm = "",
+                    NoNIK = "",
+                    Address = "",
                     IsActive = true,
                     IsVerification = false
                 };

@@ -14,6 +14,7 @@ using RepositoryPattern.Services.ArisanService;
 using RepositoryPattern.Services.RekeningService;
 using RepositoryPattern.Services.ChatService;
 using RepositoryPattern.Services.PatunganService;
+using RepositoryPattern.Services.TransaksiService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,8 @@ builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IArisanService, ArisanService>();
 builder.Services.AddScoped<IPatunganService, PatunganService>();
+builder.Services.AddScoped<ITransaksiService, TransaksiService>();
+
 
 builder.Services.AddScoped<IRekeningService, RekeningService>();
 builder.Services.AddScoped<IChatService, ChatService>();
