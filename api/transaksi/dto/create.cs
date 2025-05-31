@@ -1,5 +1,6 @@
 public class CreateTransaksiDto
 {
-    public string? Name { get; set; }
+    public float? Nominal { get; set; }
+    public string? Keterangan { get; set; }
 
 }

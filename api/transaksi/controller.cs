@@ -46,6 +46,22 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("/api/v1/Sedekah")]
+        public async Task<object> GetSedekah()
+        {
+            try
+            {
+                var data = await _ITransaksiService.GetSedekah();
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<object> GetById([FromRoute] string id)
         {
@@ -63,21 +79,6 @@ namespace Trasgo.Server.Controllers
         }
 
         // [Authorize]
-        [HttpPost]
-        public async Task<object> Post([FromBody] CreateTransaksiDto item)
-        {
-            try
-            {
-                var data = await _ITransaksiService.Post(item);
-                return Ok(data);
-            }
-            catch (CustomException ex)
-            {
-                int errorCode = ex.ErrorCode;
-                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
-                return _errorUtility.HandleError(errorCode, errorResponse);
-            }
-        }
 
         // [Authorize]
         [HttpPost("PayBulananKoperasi")]
@@ -93,6 +94,29 @@ namespace Trasgo.Server.Controllers
                 string accessToken = HttpContext.Request.Headers["Authorization"];
                 string idUser = await _ConvertJwt.ConvertString(accessToken);
                 var data = await _ITransaksiService.PayBulananKoperasi(idUser);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpPost("Sedekah")]
+        public async Task<object> Sedekah(CreateTransaksiDto item)
+        {
+            try
+            {
+                 var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _ITransaksiService.Sedekah(idUser, item);
                 return Ok(data);
             }
             catch (CustomException ex)

@@ -38,6 +38,36 @@ namespace RepositoryPattern.Services.TransaksiService
             }
         }
 
+        public async Task<object> GetSedekah()
+        {
+            try
+            {
+                var items = await dataUser
+                    .Find(_ => _.Type == "Sedekah" && _.IdUser == "Sedekah")
+                    .SortByDescending(_ => _.CreatedAt)
+                    .ToListAsync();
+
+                // Hitung total Sedekah berdasarkan status
+                var totalSedekah = items.Sum(item =>
+                    item.Status == "Income" ? item.Nominal :
+                    item.Status == "Expense" ? -item.Nominal : 0
+                );
+
+                return new
+                {
+                    code = 200,
+                    data = items,
+                    message = "Data Add Complete",
+                    totalSedekah
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
+
 
         public async Task<Object> GetById(string id)
         {
@@ -45,31 +75,6 @@ namespace RepositoryPattern.Services.TransaksiService
             {
                 var items = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
                 return new { code = 200, data = items, message = "Data Add Complete" };
-            }
-            catch (CustomException)
-            {
-                throw;
-            }
-        }
-        public async Task<object> Post(CreateTransaksiDto item)
-        {
-            try
-            {
-                var filter = Builders<Transaksi>.Filter.Eq(u => u.IdTransaksi, item.Name);
-                var user = await dataUser.Find(filter).SingleOrDefaultAsync();
-                if (user != null)
-                {
-                    throw new CustomException(400, "Error", "Nama sudah digunakan.");
-                }
-                var TransaksiData = new Transaksi()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    IsActive = true,
-                    IsVerification = false,
-                    CreatedAt = DateTime.Now
-                };
-                await dataUser.InsertOneAsync(TransaksiData);
-                return new { code = 200, id = TransaksiData.Id, message = "Data Add Complete" };
             }
             catch (CustomException)
             {
@@ -122,6 +127,55 @@ namespace RepositoryPattern.Services.TransaksiService
                     CreatedAt = DateTime.UtcNow
                 };
                 await dataUser.InsertOneAsync(transaksi);
+
+                return new { code = 200, id = transaksi.Id, message = "Data Add Complete" };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> Sedekah(string idUser, CreateTransaksiDto items)
+        {
+            try
+            {
+                var user = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
+                if (user == null)
+                    throw new CustomException(400, "Error", "Data User Not Found");
+
+                var nominal = items.Nominal ?? 0;
+                if (user.Balance < nominal)
+                    throw new CustomException(400, "Error", "Saldo tidak mencukupi");
+
+                user.Balance -= nominal;
+                await Users.ReplaceOneAsync(x => x.Phone == idUser, user);
+
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = user.Phone,
+                    IdTransaksi = Guid.NewGuid().ToString(),
+                    Type = "Sedekah",
+                    Nominal = nominal,
+                    Ket = items.Keterangan ?? "Sedekah",
+                    Status = "Expense",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await dataUser.InsertOneAsync(transaksi);
+
+                var transaksi2 = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = "Sedekah",
+                    IdTransaksi = Guid.NewGuid().ToString(),
+                    Type = "Sedekah",
+                    Nominal = nominal,
+                    Ket = items.Keterangan ?? "Sedekah",
+                    Status = "Income",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await dataUser.InsertOneAsync(transaksi2);
 
                 return new { code = 200, id = transaksi.Id, message = "Data Add Complete" };
             }
