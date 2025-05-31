@@ -84,17 +84,17 @@ namespace RepositoryPattern.Services.TransaksiService
                 var setting = await Setting.Find(d => d.Key == "IuranBulanan").FirstOrDefaultAsync()
                               ?? throw new CustomException(400, "Data", "Data not found");
 
-                var dataUsers = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
-                if (dataUsers == null)
+                var user = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
+                if (user == null)
                     throw new CustomException(400, "Error", "Data User Not Found");
 
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
                 var filter = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiBulanan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, user.Phone),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
                 );
@@ -104,26 +104,26 @@ namespace RepositoryPattern.Services.TransaksiService
                     throw new CustomException(400, "Error", "Transaksi koperasi bulan ini sudah ada.");
 
                 var nominal = setting.Value ?? 0;
-                if (dataUsers.Balance < nominal)
+                if (user.Balance < nominal)
                     throw new CustomException(400, "Error", "Saldo tidak mencukupi");
 
-                dataUsers.Balance -= nominal;
-                await Users.ReplaceOneAsync(x => x.Phone == idUser, dataUsers);
+                user.Balance -= nominal;
+                await Users.ReplaceOneAsync(x => x.Phone == idUser, user);
 
-                var transaksiData = new Transaksi()
+                var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = idUser,
+                    IdUser = user.Phone,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "KoperasiBulanan",
                     Nominal = nominal,
                     Ket = "Iuran Bulanan Koperasi",
                     Status = "Expense",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 };
-                await dataUser.InsertOneAsync(transaksiData);
+                await dataUser.InsertOneAsync(transaksi);
 
-                return new { code = 200, id = transaksiData.Id, message = "Data Add Complete" };
+                return new { code = 200, id = transaksi.Id, message = "Data Add Complete" };
             }
             catch (CustomException)
             {
