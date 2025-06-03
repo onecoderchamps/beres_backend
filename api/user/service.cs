@@ -34,8 +34,12 @@ namespace RepositoryPattern.Services.UserService
         {
             try
             {
-                var from  = await dataUser.Find(_ => _.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
-                var destination  = await dataUser.Find(_ => _.Phone == item.Phone).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
+                var from = await dataUser.Find(_ => _.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
+                var destination = await dataUser.Find(_ => _.Phone == item.Phone).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
+                if (from.Balance == null)
+                {
+                    throw new CustomException(400, "Error", "Saldo anda tidak cukup");
+                }
                 if (from.Balance < item.Balance)
                 {
                     throw new CustomException(400, "Error", "Saldo anda tidak cukup");
@@ -59,7 +63,7 @@ namespace RepositoryPattern.Services.UserService
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "Transfer",
                     Nominal = item.Balance,
-                    Ket = "Transfer Kepada "+ item.Phone,
+                    Ket = "Transfer Kepada " + item.Phone,
                     Status = "Expense",
                     CreatedAt = DateTime.Now
                 };
@@ -75,7 +79,7 @@ namespace RepositoryPattern.Services.UserService
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "Transfer",
                     Nominal = item.Balance,
-                    Ket = "Transfer Dari "+ idUser,
+                    Ket = "Transfer Dari " + idUser,
                     Status = "Income",
                     CreatedAt = DateTime.Now
                 };
