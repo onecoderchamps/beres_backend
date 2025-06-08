@@ -19,14 +19,12 @@ namespace beres.Server.Controllers
         private readonly IAttachmentService _IAttachmentService;
         private readonly ErrorHandlingUtility _errorUtility;
         private readonly ValidationMasterDto _masterValidationService;
-        private readonly IMongoCollection<MediaFile> AttachmentLink;
         private readonly ConvertJWT _ConvertJwt;
         private readonly IConfiguration _conf;
         public AttachmentController(IConfiguration configuration, IAttachmentService roleService, ConvertJWT convert)
         {
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
-            AttachmentLink = database.GetCollection<MediaFile>("MediaFile");
             _IAttachmentService = roleService;
             _errorUtility = new ErrorHandlingUtility();
             _masterValidationService = new ValidationMasterDto();
@@ -179,6 +177,102 @@ namespace beres.Server.Controllers
                 return StatusCode(500, new { status = false, message = "An error occurred", details = ex.Message });
             }
         }
+
+        [HttpGet]
+        [Route("images")]
+        public async Task<IActionResult> GetAllImages()
+        {
+            try
+            {
+                var client = new MongoClient(_conf.GetConnectionString("ConnectionURI"));
+                var database = client.GetDatabase("beres");
+                var gridFSBucket = new GridFSBucket(database);
+
+                // Filter hanya untuk image types
+                var filter = Builders<GridFSFileInfo>.Filter.In("metadata.ContentType", new[] { "image/jpeg", "image/png", "image/webp" });
+
+                // Urutkan berdasarkan UploadedAt descending
+                var sort = Builders<GridFSFileInfo>.Sort.Descending("metadata.UploadedAt");
+
+                var options = new GridFSFindOptions
+                {
+                    Sort = sort
+                };
+
+                using var cursor = await gridFSBucket.FindAsync(filter, options);
+                var files = await cursor.ToListAsync();
+
+                var imageList = files.Select(file => new
+                {
+                    fileId = file.Id.ToString(),
+                    fileName = file.Filename,
+                    contentType = file.Metadata.GetValue("ContentType", "").AsString,
+                    uploadedAt = file.Metadata.GetValue("UploadedAt", BsonNull.Value).ToUniversalTime(),
+                    uploadedBy = file.Metadata.GetValue("UploadedBy", "").AsString,
+                    previewUrl = $"https://{HttpContext.Request.Host}/api/v1/file/review/{file.Id}"
+                });
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Image files retrieved successfully",
+                    data = imageList
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "An error occurred", details = ex.Message });
+            }
+        }
+
+
+        [HttpDelete]
+        [Route("delete/{fileId}")]
+        public async Task<IActionResult> Delete(string fileId)
+        {
+            try
+            {
+                var client = new MongoClient(_conf.GetConnectionString("ConnectionURI"));
+                var database = client.GetDatabase("beres");
+                var gridFSBucket = new GridFSBucket(database);
+
+                var objectId = new ObjectId(fileId);
+
+                // Check if file exists before attempting to delete
+                var filter = Builders<GridFSFileInfo>.Filter.Eq("_id", objectId);
+                using var cursor = await gridFSBucket.FindAsync(filter);
+                var fileInfo = await cursor.FirstOrDefaultAsync();
+
+                if (fileInfo == null)
+                {
+                    return NotFound(new { status = false, message = "File not found." });
+                }
+
+                await gridFSBucket.DeleteAsync(objectId);
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "File deleted successfully",
+                    fileId = fileId
+                });
+            }
+            catch (FormatException)
+            {
+                return BadRequest(new { status = false, message = "Invalid fileId format." });
+            }
+            catch (GridFSFileNotFoundException)
+            {
+                return NotFound(new { status = false, message = "File not found." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "An error occurred", details = ex.Message });
+            }
+        }
+
+
+
     }
 }
 
