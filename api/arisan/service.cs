@@ -605,7 +605,6 @@ namespace RepositoryPattern.Services.ArisanService
                 ArisanData.TargetLot = item.TargetLot;
                 ArisanData.TargetAmount = item.TargetAmount;
                 ArisanData.PenagihanDate = item.PenagihanDate;
-                ArisanData.Title = item.Title;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
                 return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Updated" };
             }
