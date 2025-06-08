@@ -9,10 +9,6 @@ public interface IArisanService
     Task<Object> AddBannerToArisan(CreateBannerArisan memberArisan);
     Task<Object> PayArisan(CreatePaymentArisan memberArisan, string idArisan);
     Task<Object> PayCompleteArisan(CreatePaymentArisan2 memberArisan, string idArisan);
-
-
-
-
     Task<Object> Put(string id, CreateArisanDto items);
     Task<Object> Delete(string id);
 }

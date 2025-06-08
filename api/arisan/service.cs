@@ -347,7 +347,7 @@ namespace RepositoryPattern.Services.ArisanService
                     throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
-                if(roleData.IdRole != "2")
+                if (roleData.IdRole != "2")
                 {
                     throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran arisan.");
                 }
@@ -596,6 +596,15 @@ namespace RepositoryPattern.Services.ArisanService
                 {
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
+                ArisanData.Title = item.Title;
+                ArisanData.Description = item.Description;
+                ArisanData.Keterangan = item.Keterangan;
+                ArisanData.Banner = item.Banner?.ToList();
+                ArisanData.Document = item.Document?.ToList();
+                ArisanData.Location = item.Location;
+                ArisanData.TargetLot = item.TargetLot;
+                ArisanData.TargetAmount = item.TargetAmount;
+                ArisanData.PenagihanDate = item.PenagihanDate;
                 ArisanData.Title = item.Title;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
                 return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Updated" };
