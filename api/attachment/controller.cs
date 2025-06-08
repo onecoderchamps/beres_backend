@@ -209,7 +209,10 @@ namespace beres.Server.Controllers
                     contentType = file.Metadata.GetValue("ContentType", "").AsString,
                     uploadedAt = file.Metadata.GetValue("UploadedAt", BsonNull.Value).ToUniversalTime(),
                     uploadedBy = file.Metadata.GetValue("UploadedBy", "").AsString,
-                    previewUrl = $"https://{HttpContext.Request.Host}/api/v1/file/review/{file.Id}"
+                    // previewUrl = $"https://{HttpContext.Request.Host}/api/v1/file/review/{file.Id}"
+                    
+                    previewUrl = $"https://beres-backend-609517395039.asia-southeast2.run.app/api/v1/file/review/{file.Id}"
+                    
                 });
 
                 return Ok(new

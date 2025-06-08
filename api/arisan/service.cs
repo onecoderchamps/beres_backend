@@ -601,10 +601,8 @@ namespace RepositoryPattern.Services.ArisanService
                 ArisanData.Keterangan = item.Keterangan;
                 ArisanData.Banner = item.Banner?.ToList();
                 ArisanData.Document = item.Document?.ToList();
-                ArisanData.Location = item.Location;
                 ArisanData.TargetLot = item.TargetLot;
                 ArisanData.TargetAmount = item.TargetAmount;
-                ArisanData.PenagihanDate = item.PenagihanDate;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
                 return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Updated" };
             }
