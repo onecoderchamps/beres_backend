@@ -379,15 +379,6 @@ namespace RepositoryPattern.Services.PatunganService
         {
             try
             {
-                // Cek apakah judul Patungan sudah digunakan
-                var filter = Builders<Patungan>.Filter.Eq(u => u.Title, item.Title);
-                var existingPatungan = await dataUser.Find(filter).SingleOrDefaultAsync();
-
-                if (existingPatungan != null)
-                {
-                    throw new CustomException(400, "Error", "Nama Patungan sudah digunakan.");
-                }
-
                 // Mapping DTO ke model
                 var PatunganData = new Patungan
                 {

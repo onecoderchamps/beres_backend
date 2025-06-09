@@ -380,15 +380,6 @@ namespace RepositoryPattern.Services.ArisanService
         {
             try
             {
-                // Cek apakah judul arisan sudah digunakan
-                var filter = Builders<Arisan>.Filter.Eq(u => u.Title, item.Title);
-                var existingArisan = await dataUser.Find(filter).SingleOrDefaultAsync();
-
-                if (existingArisan != null)
-                {
-                    throw new CustomException(400, "Error", "Nama arisan sudah digunakan.");
-                }
-
                 // Mapping DTO ke model
                 var arisanData = new Arisan
                 {
