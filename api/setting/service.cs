@@ -19,7 +19,7 @@ namespace RepositoryPattern.Services.SettingService
         {
             try
             {
-                var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
+                var items = await dataUser.Find(_ => true).ToListAsync();
                 return new { code = 200, data = items, message = "Data Add Complete" };
             }
             catch (CustomException)
