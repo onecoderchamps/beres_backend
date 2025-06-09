@@ -596,6 +596,12 @@ namespace RepositoryPattern.Services.PatunganService
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
                 PatunganData.Title = item.Title;
+                PatunganData.Description = item.Description;
+                PatunganData.Keterangan = item.Keterangan;
+                PatunganData.Banner = item.Banner?.ToList();
+                PatunganData.Document = item.Document?.ToList();
+                PatunganData.TargetLot = item.TargetLot;
+                PatunganData.TargetAmount = item.TargetAmount;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, PatunganData);
                 return new { code = 200, id = PatunganData.Id.ToString(), message = "Data Updated" };
             }
