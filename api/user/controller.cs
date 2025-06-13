@@ -92,6 +92,33 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpPost("AddUser")]
+        public async Task<object> AddUser([FromBody] CreateUserDto item)
+        {
+            try
+            {
+                if (!IsClaimsValid())
+                {
+                    throw new CustomException(400, "Error", "Unauthorized");
+                }
+
+                string idUser = await GetUserIdFromJwtAsync();
+
+                if (!await IsUserRoleAllowedAsync(idUser))
+                {
+                    throw new CustomException(400, "Error", "Account not allowed");
+                }
+                var data = await _IUserService.AddUser(item);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         // // [Authorize]
         // [HttpPut("{id}")]
         // public async Task<object> Put([FromRoute] string id, [FromBody] CreateUserDto item)

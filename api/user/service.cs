@@ -105,22 +105,35 @@ namespace RepositoryPattern.Services.UserService
                 throw;
             }
         }
-        public async Task<object> Post(CreateUserDto item)
+        public async Task<object> AddUser(CreateUserDto item)
         {
             try
             {
-                var filter = Builders<User>.Filter.Eq(u => u.FullName, item.Name);
+                var filter = Builders<User>.Filter.Eq(u => u.Phone, item.Phone);
                 var user = await dataUser.Find(filter).SingleOrDefaultAsync();
                 if (user != null)
                 {
-                    throw new CustomException(400, "Error", "Nama sudah digunakan.");
+                    throw new CustomException(400, "Error", "Phone sudah digunakan.");
                 }
-                var UserData = new User()
+                var uuid = Guid.NewGuid().ToString();
+                var UserData = new User
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = uuid,
+                    Phone = item.Phone,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IdRole = "1",
+                    FullName = item.FullName,
+                    Email = "",
+                    Image = "https://beres-backend-609517395039.asia-southeast2.run.app/api/v1/file/review/68333845226d836a9b5eb15c",
+                    Pin = "",
+                    Balance = 0,
+                    Point = 0,
+                    Fcm = "",
+                    NoNIK = "",
+                    Address = "",
                     IsActive = true,
-                    IsVerification = false,
-                    CreatedAt = DateTime.Now
+                    IsVerification = false
                 };
                 await dataUser.InsertOneAsync(UserData);
                 return new { code = 200, id = UserData.Id, message = "Data Add Complete" };
@@ -131,24 +144,24 @@ namespace RepositoryPattern.Services.UserService
             }
         }
 
-        public async Task<object> Put(string id, CreateUserDto item)
-        {
-            try
-            {
-                var UserData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
-                if (UserData == null)
-                {
-                    throw new CustomException(400, "Error", "Data Not Found");
-                }
-                UserData.FullName = item.Name;
-                await dataUser.ReplaceOneAsync(x => x.Id == id, UserData);
-                return new { code = 200, id = UserData.Id.ToString(), message = "Data Updated" };
-            }
-            catch (CustomException)
-            {
-                throw;
-            }
-        }
+        // public async Task<object> Put(string id, CreateUserDto item)
+        // {
+        //     try
+        //     {
+        //         var UserData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
+        //         if (UserData == null)
+        //         {
+        //             throw new CustomException(400, "Error", "Data Not Found");
+        //         }
+        //         UserData.FullName = item.Name;
+        //         await dataUser.ReplaceOneAsync(x => x.Id == id, UserData);
+        //         return new { code = 200, id = UserData.Id.ToString(), message = "Data Updated" };
+        //     }
+        //     catch (CustomException)
+        //     {
+        //         throw;
+        //     }
+        // }
         public async Task<object> Delete(string id)
         {
             try
