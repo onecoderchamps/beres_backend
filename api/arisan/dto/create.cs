@@ -47,5 +47,7 @@ public class CreatePaymentArisan2
 {
     public string? IdTransaksi { get; set; }
     public string? IdUser { get; set; }
+    public string? Id { get; set; }
+
 
 }

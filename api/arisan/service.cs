@@ -352,7 +352,7 @@ namespace RepositoryPattern.Services.ArisanService
                 {
                     throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran arisan.");
                 }
-                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive);
+                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive && m.Id == id.Id);
                 if (member == null)
                 {
                     throw new CustomException(404, "Error", "Data member arisan tidak ditemukan.");
