@@ -48,7 +48,7 @@ namespace Beres.Shared.Models
 
     public class MemberArisan
     {
-        [BsonElement("Id")]
+        [BsonId]
         public string? Id { get; set; }
         [BsonElement("IdUser")]
         public string? IdUser { get; set; }

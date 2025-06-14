@@ -61,6 +61,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                             memberList.Add(new
                             {
+                                member.Id,
                                 member.IsPayed,
                                 member.IdUser,
                                 member.PhoneNumber,
@@ -233,7 +234,7 @@ namespace RepositoryPattern.Services.ArisanService
                 var cekDbArisan = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
                 if (cekDbArisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
 
                 var now = DateTime.Now;
@@ -276,13 +277,13 @@ namespace RepositoryPattern.Services.ArisanService
                 var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
                 if (cekDbArisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
-                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data Error");
                 var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
                 if (member == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data member arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data member arisan tidak ditemukan.");
                 }
                 if (roleData.Balance < cekDbArisan.TargetAmount * member.JumlahLot)
                 {
@@ -344,9 +345,9 @@ namespace RepositoryPattern.Services.ArisanService
                 var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
                 if (cekDbArisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
-                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data Error");
                 if (roleData.IdRole != "2")
                 {
                     throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran arisan.");
@@ -354,7 +355,7 @@ namespace RepositoryPattern.Services.ArisanService
                 var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive);
                 if (member == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data member arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data member arisan tidak ditemukan.");
                 }
                 // Kurangi saldo user
                 member.IsPayed = true;
@@ -434,7 +435,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                 if (arisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
 
                 // Cek apakah member dengan ID atau nomor telepon sudah ada
@@ -486,12 +487,20 @@ namespace RepositoryPattern.Services.ArisanService
             try
             {
                 // Cek apakah Arisan dengan ID yang diberikan ada
+                var filterUser = Builders<User>.Filter.Eq(a => a.Phone, newMember.IdUser);
+                var user = await User.Find(filterUser).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    throw new CustomException(404, "Error", "Ponsel tidak ditemukans.");
+                }
+
                 var filter = Builders<Arisan>.Filter.Eq(a => a.Id, newMember.IdArisan);
                 var arisan = await dataUser.Find(filter).FirstOrDefaultAsync();
 
                 if (arisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
 
                 var dataArisan = new MemberArisan
@@ -511,6 +520,7 @@ namespace RepositoryPattern.Services.ArisanService
                 return new
                 {
                     code = 200,
+                    data = update,
                     message = "Member berhasil ditambahkan ke arisan."
                 };
             }
@@ -534,7 +544,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                 if (arisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
 
                 // Buat filter untuk menarik member dengan IdUser yang ingin dihapus
@@ -556,6 +566,7 @@ namespace RepositoryPattern.Services.ArisanService
                 return new
                 {
                     code = 200,
+                    data = result,
                     message = "Member berhasil dihapus dari arisan."
                 };
             }
@@ -577,9 +588,9 @@ namespace RepositoryPattern.Services.ArisanService
                 var cekDbArisan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
                 if (cekDbArisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
-                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data Error");
                 if (roleData.Balance < cekDbArisan.TargetAmount * lot)
                 {
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
@@ -643,7 +654,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                 if (arisan == null)
                 {
-                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                    throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
 
                 var update = Builders<Arisan>.Update
@@ -675,7 +686,7 @@ namespace RepositoryPattern.Services.ArisanService
                 var ArisanData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
                 if (ArisanData == null)
                 {
-                    throw new CustomException(400, "Error", "Data Not Found");
+                    throw new CustomException(400, "Error", "Data Error");
                 }
                 ArisanData.Title = item.Title;
                 ArisanData.Description = item.Description;
@@ -700,7 +711,7 @@ namespace RepositoryPattern.Services.ArisanService
                 var ArisanData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
                 if (ArisanData == null)
                 {
-                    throw new CustomException(400, "Error", "Data Not Found");
+                    throw new CustomException(400, "Error", "Data Error");
                 }
                 ArisanData.IsActive = false;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
