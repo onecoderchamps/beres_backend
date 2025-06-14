@@ -200,6 +200,54 @@ namespace Trasgo.Server.Controllers
         }
 
         [Authorize]
+        [HttpPost("AddNewArisanMemberbyAdmin")]
+        public async Task<object> AddNewMemberByAdmin([FromBody] CreateMemberArisan item)
+        {
+            try
+            {
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IArisanService.AddMemberToArisanByAdmin(item);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("DeleteArisanMemberbyAdmin")]
+        public async Task<object> DeleteArisanMemberbyAdmin([FromBody] DeleteMemberArisan item)
+        {
+            try
+            {
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IArisanService.DeleteMemberArisan(item);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [Authorize]
         [HttpPost("AddNewBannerArisanMember")]
         public async Task<object> AddBannerNewMember([FromBody] CreateBannerArisan item)
         {

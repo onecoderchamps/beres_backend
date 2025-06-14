@@ -22,6 +22,14 @@ public class CreateMemberArisan
     public bool IsPayed { get; set; } = false;
 }
 
+public class DeleteMemberArisan
+{
+    public string? Id { get; set; }
+    public string? IdUser { get; set; }
+    public string? IdArisan { get; set; }
+
+}
+
 public class CreateBannerArisan
 {
     public string? IdArisan { get; set; }

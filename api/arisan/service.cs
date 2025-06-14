@@ -453,6 +453,7 @@ namespace RepositoryPattern.Services.ArisanService
 
                 var dataArisan = new MemberArisan
                 {
+                    Id = Guid.NewGuid().ToString(),
                     IdUser = newMember.IdUser,
                     PhoneNumber = newMember.PhoneNumber,
                     JumlahLot = newMember.JumlahLot,
@@ -479,6 +480,95 @@ namespace RepositoryPattern.Services.ArisanService
                 throw new CustomException(500, "Internal Server Error", ex.Message);
             }
         }
+
+        public async Task<object> AddMemberToArisanByAdmin(CreateMemberArisan newMember)
+        {
+            try
+            {
+                // Cek apakah Arisan dengan ID yang diberikan ada
+                var filter = Builders<Arisan>.Filter.Eq(a => a.Id, newMember.IdArisan);
+                var arisan = await dataUser.Find(filter).FirstOrDefaultAsync();
+
+                if (arisan == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                }
+
+                var dataArisan = new MemberArisan
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = newMember.IdUser,
+                    PhoneNumber = newMember.PhoneNumber,
+                    JumlahLot = newMember.JumlahLot,
+                    IsActive = newMember.IsActive,
+                    IsPayed = newMember.IsPayed
+                };
+
+                // Tambahkan member baru ke list
+                var update = Builders<Arisan>.Update.Push("MemberArisans", dataArisan);
+                await dataUser.UpdateOneAsync(filter, update);
+
+                return new
+                {
+                    code = 200,
+                    message = "Member berhasil ditambahkan ke arisan."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
+        public async Task<object> DeleteMemberArisan(DeleteMemberArisan request)
+        {
+            try
+            {
+                // Cek apakah Arisan dengan ID yang diberikan ada
+                var filter = Builders<Arisan>.Filter.Eq(a => a.Id, request.IdArisan);
+                var arisan = await dataUser.Find(filter).FirstOrDefaultAsync();
+
+                if (arisan == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data arisan tidak ditemukan.");
+                }
+
+                // Buat filter untuk menarik member dengan IdUser yang ingin dihapus
+                var memberFilter = Builders<MemberArisan>.Filter.And(
+                    Builders<MemberArisan>.Filter.Eq(m => m.IdUser, request.IdUser),
+                    Builders<MemberArisan>.Filter.Eq(m => m.Id, request.Id)
+                );
+
+                var update = Builders<Arisan>.Update.PullFilter(a => a.MemberArisans, memberFilter);
+
+
+                var result = await dataUser.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    throw new CustomException(400, "Bad Request", "Member tidak ditemukan dalam arisan.");
+                }
+
+                return new
+                {
+                    code = 200,
+                    message = "Member berhasil dihapus dari arisan."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
 
         public async Task<object> PayArisanFirst(CreatePaymentArisan id, string idUser, float lot)
         {
