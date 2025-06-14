@@ -280,12 +280,12 @@ namespace RepositoryPattern.Services.ArisanService
                     throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data Error");
-                var member = cekDbArisan.MemberArisans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
+                var member = cekDbArisan.MemberArisans.Where(m => m.IdUser == idUser && m.IsActive).Sum(m => m.JumlahLot ?? 0);
                 if (member == null)
                 {
                     throw new CustomException(404, "Error", "Data member arisan tidak ditemukan.");
                 }
-                if (roleData.Balance < cekDbArisan.TargetAmount * member.JumlahLot)
+                if (roleData.Balance < cekDbArisan.TargetAmount * member)
                 {
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
                 }
@@ -306,7 +306,7 @@ namespace RepositoryPattern.Services.ArisanService
                     throw new CustomException(400, "Error", "Transaksi arisan bulan ini sudah ada.");
                 }
                 // Kurangi saldo user
-                roleData.Balance -= cekDbArisan.TargetAmount * member.JumlahLot ?? 0;
+                roleData.Balance -= cekDbArisan.TargetAmount * member ?? 0;
                 await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
                 // Buat transaksi baru  
                 var transaksi = new Transaksi
@@ -315,7 +315,7 @@ namespace RepositoryPattern.Services.ArisanService
                     IdUser = idUser,
                     IdTransaksi = cekDbArisan.Id,
                     Type = "Arisan",
-                    Nominal = cekDbArisan.TargetAmount * member.JumlahLot,
+                    Nominal = cekDbArisan.TargetAmount * member,
                     Ket = "Pembayaran Arisan",
                     Status = "Expense",
                     CreatedAt = DateTime.Now
@@ -501,6 +501,11 @@ namespace RepositoryPattern.Services.ArisanService
                 if (arisan == null)
                 {
                     throw new CustomException(404, "Error", "Data arisan tidak ditemukan.");
+                }
+
+                if(arisan.MemberArisans.Count >= arisan.TargetLot)
+                {
+                    throw new CustomException(400, "Error", "Arisan sudah penuh.");
                 }
 
                 var dataArisan = new MemberArisan
