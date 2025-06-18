@@ -19,9 +19,9 @@ using RepositoryPattern.Services.UserService;
 using RepositoryPattern.Services.BannerService;
 using RepositoryPattern.Services.SettingService;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
+// Dependency Injection
 builder.Services.AddSingleton<ConvertJWT>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
@@ -40,17 +40,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
+
+// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}
-).AddJwtBearer(options =>
+}).AddJwtBearer(options =>
 {
-    var builder = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-    IConfigurationRoot configuration = builder.Build();
+    var configBuilder = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+    IConfigurationRoot configuration = configBuilder.Build();
     string secretKey = configuration.GetSection("AppSettings")["JwtKey"];
 
     options.RequireHttpsMetadata = false;
@@ -64,11 +66,11 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = "Beres.com",
         ValidAudience = "Beres.com",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)) // NOTE: THIS SHOULD BE A SECRET KEY NOT TO BE SHARED; A GUID IS RECOMMENDED
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
 
-
+// Swagger Config
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Beres", Version = "v1" });
@@ -79,7 +81,7 @@ builder.Services.AddSwaggerGen(c =>
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer", // The scheme should be "bearer"
+        Scheme = "bearer",
         BearerFormat = "JWT"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -98,71 +100,71 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Allow CORS from any origin
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
 });
 
+// File upload limit
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 300 * 1024 * 1024; // 50 MB
+    options.Limits.MaxRequestBodySize = 300 * 1024 * 1024; // 300 MB
 });
-
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 300 * 1024 * 1024; // 200 MB
+    options.MultipartBodyLengthLimit = 300 * 1024 * 1024; // 300 MB
 });
 
-// builder.WebHost.UseUrls("http://0.0.0.0:8080");
-
-
+// Build App
 var app = builder.Build();
-app.Use(async (context, next) =>
-{
-    context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
-    context.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
-    await next();
-});
+
+// Routing & Middleware order
+app.UseRouting();
+
+app.UseCors("AllowAll");
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blazor API V1");
 });
+
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
 app.UseStaticFiles();
+
 app.Use(async (context, next) =>
+{
+    var maxRequestBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (maxRequestBodySizeFeature != null)
     {
-        var maxRequestBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
-        if (maxRequestBodySizeFeature != null)
+        maxRequestBodySizeFeature.MaxRequestBodySize = 200 * 1024 * 1024;
+    }
+
+    await next();
+
+    if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized)
+    {
+        context.Response.ContentType = "application/json";
+        var viewModel = new
         {
-            maxRequestBodySizeFeature.MaxRequestBodySize = 200 * 1024 * 1024;
-        }
+            code = 401,
+            errorMessage = new ErrorDtoVM { error = MessageReport.Unauthorized }
+        };
+        var json = JsonSerializer.Serialize(viewModel);
+        await context.Response.WriteAsync(json);
+    }
+});
 
-        await next();
-
-        if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized) // 401
-        {
-            context.Response.ContentType = "application/json";
-
-            var viewModel = new
-            {
-                code = 401,
-                errorMessage = new ErrorDtoVM { error = MessageReport.Unauthorized }
-            };
-            var json = JsonSerializer.Serialize(viewModel);
-            await context.Response.WriteAsync(json);
-        }
-    });
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
