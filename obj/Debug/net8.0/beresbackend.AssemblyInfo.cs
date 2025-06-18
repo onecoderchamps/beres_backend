@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("beresbackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fd696fffd6ec968ede5aa52587167314274dcbea")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3862e12dda72d94da36779d1c2081cda377c8c5")]
 [assembly: System.Reflection.AssemblyProductAttribute("beresbackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("beresbackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
