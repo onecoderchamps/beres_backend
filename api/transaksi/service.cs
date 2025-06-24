@@ -8,6 +8,8 @@ namespace RepositoryPattern.Services.TransaksiService
         private readonly IMongoCollection<Transaksi> dataUser;
         private readonly IMongoCollection<User> Users;
         private readonly IMongoCollection<Setting3> Setting;
+        private readonly IMongoCollection<Event> dataEvent;
+
         private readonly string key;
 
         public TransaksiService(IConfiguration configuration)
@@ -16,6 +18,8 @@ namespace RepositoryPattern.Services.TransaksiService
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<Transaksi>("Transaksi");
             Users = database.GetCollection<User>("User");
+            dataEvent = database.GetCollection<Event>("Event");
+
             Setting = database.GetCollection<Setting3>("Setting");
 
 
@@ -176,6 +180,50 @@ namespace RepositoryPattern.Services.TransaksiService
                     CreatedAt = DateTime.UtcNow
                 };
                 await dataUser.InsertOneAsync(transaksi2);
+
+                return new { code = 200, id = transaksi.Id, message = "Data Add Complete" };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
+         public async Task<object> Event(string idUser, CreateEventPayDto items)
+        {
+            try
+            {
+                var user = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
+                if (user == null)
+                    throw new CustomException(400, "Error", "Data User Not Found");
+
+                var dataEvents = await dataEvent.Find(x => x.Id == items.IdEvent).FirstOrDefaultAsync();
+                if (dataEvents == null)
+                    throw new CustomException(400, "Error", "Data Event Not Found");
+
+                var dataPayed = await dataUser.Find(x => x.IdTransaksi == items.IdEvent && x.IdUser == idUser).FirstOrDefaultAsync();
+                if (dataPayed != null)
+                    throw new CustomException(400, "Error", "Sudah Membayar Event ini");    
+
+                var nominal = dataEvents.Price ?? 0;
+                if (user.Balance < nominal)
+                    throw new CustomException(400, "Error", "Saldo tidak mencukupi");
+
+                user.Balance -= nominal;
+                await Users.ReplaceOneAsync(x => x.Phone == idUser, user);
+
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = user.Phone,
+                    IdTransaksi = items.IdEvent,
+                    Type = "Event",
+                    Nominal = nominal,
+                    Ket = dataEvents.Name ?? "Event",
+                    Status = "Expense",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await dataUser.InsertOneAsync(transaksi);
 
                 return new { code = 200, id = transaksi.Id, message = "Data Add Complete" };
             }

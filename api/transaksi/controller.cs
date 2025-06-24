@@ -127,6 +127,29 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpPost("Event")]
+        public async Task<object> Event(CreateEventPayDto item)
+        {
+            try
+            {
+                 var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _ITransaksiService.Event(idUser, item);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         // [Authorize]
         [HttpPut("{id}")]
         public async Task<object> Put([FromRoute] string id, [FromBody] CreateTransaksiDto item)
