@@ -6,6 +6,8 @@ namespace RepositoryPattern.Services.EventService
     public class EventService : IEventService
     {
         private readonly IMongoCollection<Event> dataUser;
+        private readonly IMongoCollection<Transaksi> dataTransaksi;
+
         private readonly string key;
 
         public EventService(IConfiguration configuration)
@@ -13,6 +15,8 @@ namespace RepositoryPattern.Services.EventService
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<Event>("Event");
+            dataTransaksi = database.GetCollection<Transaksi>("Transaksi");
+
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
         }
         public async Task<Object> Get()
@@ -28,11 +32,15 @@ namespace RepositoryPattern.Services.EventService
             }
         }
 
-        public async Task<Object> GetById(string id)
+        public async Task<Object> GetById(string id, string idUser)
         {
             try
             {
-                var items = await dataUser.Find(_ => _.Id == id).FirstOrDefaultAsync();
+                var dataEvents = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
+                if (dataEvents == null)
+                    throw new CustomException(400, "Error", "Data Event Not Found");
+
+                var items = await dataTransaksi.Find(_ => _.IdTransaksi == id && _.IdUser == idUser).FirstOrDefaultAsync();
                 return new { code = 200, data = items, message = "Data Add Complete" };
             }
             catch (CustomException)

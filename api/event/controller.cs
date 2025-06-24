@@ -13,9 +13,11 @@ namespace Trasgo.Server.Controllers
         private readonly IEventService _IEventService;
         private readonly ErrorHandlingUtility _errorUtility;
         private readonly ValidationMasterDto _masterValidationService;
-        public EventController(IEventService EventService)
+        private readonly ConvertJWT _ConvertJwt;
+        public EventController(IEventService EventService,  ConvertJWT convert)
         {
             _IEventService = EventService;
+            _ConvertJwt = convert;
             _errorUtility = new ErrorHandlingUtility();
             _masterValidationService = new ValidationMasterDto();
         }
@@ -42,7 +44,14 @@ namespace Trasgo.Server.Controllers
         {
             try
             {
-                var data = await _IEventService.GetById(id);
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IEventService.GetById(id, idUser);
                 return Ok(data);
             }
             catch (CustomException ex)
