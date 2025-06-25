@@ -46,6 +46,23 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("user/{id}")]
+        public async Task<object> GetIdUser([FromRoute] string id)
+        {
+            try
+            {
+                Console.WriteLine($"GetIdUser called with idUser: {id}");
+                var data = await _ITransaksiService.Get(id);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         [HttpGet("/api/v1/Sedekah")]
         public async Task<object> GetSedekah()
         {
