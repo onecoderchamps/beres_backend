@@ -90,7 +90,20 @@ namespace RepositoryPattern.Services.OrderService
                 var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var appConfig = await _settingCollection.Find(d => d.Key == "appKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var phoneCS = await _settingCollection.Find(d => d.Key == "CS").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
-                var emailBody = BannerData.IdUser + $"#Saldo#" + BannerData.Price + $"#UniqueCode#" + BannerData.UniqueCode + $"#Bukti Transfer => " + item.Image;
+                
+                string imageUrl = !string.IsNullOrEmpty(item.Image) && item.Image != "null"
+                  ? "Bukti Transfer: " + item.Image // Jika ada link, tambahkan label
+                  : "Tidak ada bukti transfer";
+                var indonesianCulture = new System.Globalization.CultureInfo("id-ID");
+                string formattedPrice = string.Format(indonesianCulture, "{0:N0}", BannerData.Price);
+                string formattedUniqueCode = string.Format(indonesianCulture, "{0:N0}", BannerData.UniqueCode);
+
+                var emailBody = $"Halo Admin, ada topup baru!\n" +
+                $"ID User: {BannerData.IdUser}\n" +
+                $"Jumlah Top Up: Rp {formattedPrice}\n" +
+                $"Kode Unik: {formattedUniqueCode}\n" +
+                $"{imageUrl}";
+                
                 try
                 {
                     using (var httpClient = new HttpClient())
