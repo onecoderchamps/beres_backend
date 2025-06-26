@@ -17,7 +17,7 @@ namespace Trasgo.Server.Controllers
         public PatunganController(IPatunganService PatunganService, ConvertJWT convert)
         {
             _IPatunganService = PatunganService;
-             _ConvertJwt = convert;
+            _ConvertJwt = convert;
             _errorUtility = new ErrorHandlingUtility();
             _masterValidationService = new ValidationMasterDto();
         }
@@ -247,6 +247,54 @@ namespace Trasgo.Server.Controllers
             try
             {
                 var data = await _IPatunganService.Delete(id);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+        
+        [Authorize]
+        [HttpPost("AddNewPatunganMemberbyAdmin")]
+        public async Task<object> AddNewMemberByAdmin([FromBody] CreateMemberPatungan item)
+        {
+            try
+            {
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IPatunganService.AddMemberToPatunganByAdmin(item);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("DeletePatunganMemberbyAdmin")]
+        public async Task<object> DeletePatunganMemberbyAdmin([FromBody] DeleteMemberPatungan item)
+        {
+            try
+            {
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return new CustomException(400, "Error", "Unauthorized");
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var data = await _IPatunganService.DeleteMemberPatungan(item);
                 return Ok(data);
             }
             catch (CustomException ex)

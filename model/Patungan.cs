@@ -48,6 +48,8 @@ namespace Beres.Shared.Models
 
     public class MemberPatungan
     {
+        [BsonId]
+        public string? Id { get; set; }
         [BsonElement("IdUser")]
         public string? IdUser { get; set; }
 

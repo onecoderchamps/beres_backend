@@ -60,6 +60,7 @@ namespace RepositoryPattern.Services.PatunganService
 
                             memberList.Add(new
                             {
+                                member.Id,
                                 member.IsPayed,
                                 member.IdUser,
                                 member.PhoneNumber,
@@ -452,6 +453,7 @@ namespace RepositoryPattern.Services.PatunganService
 
                 var dataPatungan = new MemberPatungan
                 {
+                    Id = Guid.NewGuid().ToString(),
                     IdUser = newMember.IdUser,
                     PhoneNumber = newMember.PhoneNumber,
                     JumlahLot = newMember.JumlahLot,
@@ -530,6 +532,109 @@ namespace RepositoryPattern.Services.PatunganService
                 {
                     code = 200,
                     message = "Cek pembayaran berhasil."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
+        public async Task<object> AddMemberToPatunganByAdmin(CreateMemberPatungan newMember)
+        {
+            try
+            {
+                // Cek apakah Patungan dengan ID yang diberikan ada
+                var filterUser = Builders<User>.Filter.Eq(a => a.Phone, newMember.IdUser);
+                var user = await User.Find(filterUser).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    throw new CustomException(404, "Error", "Ponsel tidak ditemukans.");
+                }
+
+                var filter = Builders<Patungan>.Filter.Eq(a => a.Id, newMember.IdPatungan);
+                var Patungan = await dataUser.Find(filter).FirstOrDefaultAsync();
+
+                if (Patungan == null)
+                {
+                    throw new CustomException(404, "Error", "Data Patungan tidak ditemukan.");
+                }
+
+                if(Patungan.MemberPatungans.Count >= Patungan.TargetLot)
+                {   
+                    throw new CustomException(400, "Error", "Patungan sudah penuh.");
+                }
+
+                var dataPatungan = new MemberPatungan
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = newMember.IdUser,
+                    PhoneNumber = newMember.PhoneNumber,
+                    JumlahLot = newMember.JumlahLot,
+                    IsActive = newMember.IsActive,
+                    IsPayed = newMember.IsPayed
+                };
+
+                // Tambahkan member baru ke list
+                var update = Builders<Patungan>.Update.Push("MemberPatungans", dataPatungan);
+                await dataUser.UpdateOneAsync(filter, update);
+
+                return new
+                {
+                    code = 200,
+                    data = update,
+                    message = "Member berhasil ditambahkan ke Patungan."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
+        public async Task<object> DeleteMemberPatungan(DeleteMemberPatungan request)
+        {
+            try
+            {
+                // Cek apakah Patungan dengan ID yang diberikan ada
+                var filter = Builders<Patungan>.Filter.Eq(a => a.Id, request.IdPatungan);
+                var Patungan = await dataUser.Find(filter).FirstOrDefaultAsync();
+
+                if (Patungan == null)
+                {
+                    throw new CustomException(404, "Error", "Data Patungan tidak ditemukan.");
+                }
+
+                // Buat filter untuk menarik member dengan IdUser yang ingin dihapus
+                var memberFilter = Builders<MemberPatungan>.Filter.And(
+                    Builders<MemberPatungan>.Filter.Eq(m => m.IdUser, request.IdUser),
+                    Builders<MemberPatungan>.Filter.Eq(m => m.Id, request.Id)
+                );
+
+                var update = Builders<Patungan>.Update.PullFilter(a => a.MemberPatungans, memberFilter);
+
+
+                var result = await dataUser.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    throw new CustomException(400, "Bad Request", "Member tidak ditemukan dalam Patungan.");
+                }
+
+                return new
+                {
+                    code = 200,
+                    data = result,
+                    message = "Member berhasil dihapus dari Patungan."
                 };
             }
             catch (CustomException)

@@ -29,6 +29,14 @@ public class CreateBannerPatungan
     public List<string>? UrlDocument { get; set; }
 }
 
+public class DeleteMemberPatungan
+{
+    public string? Id { get; set; }
+    public string? IdUser { get; set; }
+    public string? IdPatungan { get; set; }
+
+}
+
 public class CreatePaymentPatungan
 {
     public string? IdTransaksi { get; set; }
