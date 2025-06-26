@@ -8,6 +8,7 @@ namespace RepositoryPattern.Services.OrderService
         private readonly IMongoCollection<Order> dataUser;
         private readonly IMongoCollection<Transaksi> dataTransaksi;
         private readonly IMongoCollection<User> Users;
+        private readonly IMongoCollection<Setting> _settingCollection;
 
 
         private readonly string key;
@@ -19,6 +20,7 @@ namespace RepositoryPattern.Services.OrderService
             dataUser = database.GetCollection<Order>("Order");
             Users = database.GetCollection<User>("User");
             dataTransaksi = database.GetCollection<Transaksi>("Transaksi");
+            _settingCollection = database.GetCollection<Setting>("Setting");
 
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
         }
@@ -35,15 +37,15 @@ namespace RepositoryPattern.Services.OrderService
             }
         }
 
-         public async Task<object> PostSaldo(CreateOrderDto item, string idUser)
+        public async Task<object> PostSaldo(CreateOrderDto item, string idUser)
         {
             try
             {
-                if(item.Price == null || item.Price <= 0)
+                if (item.Price == null || item.Price <= 0)
                 {
                     throw new CustomException(400, "Error", "Price Tidak Boleh Kosong Atau Kurang Dari 0");
                 }
-                if(item.Price < 10000)
+                if (item.Price < 10000)
                 {
                     throw new CustomException(400, "Error", "Minimal Top Up Saldo Adalah Rp. 10.000");
                 }
@@ -76,7 +78,7 @@ namespace RepositoryPattern.Services.OrderService
             }
         }
 
-         public async Task<object> UpdateStatus(UpdateOrderDto item)
+        public async Task<object> UpdateStatus(UpdateOrderDto item)
         {
             try
             {
@@ -85,10 +87,40 @@ namespace RepositoryPattern.Services.OrderService
                 {
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
-                BannerData.Status = item.Status;
-                BannerData.Image = item.Image ?? BannerData.Image;
-                await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
-                return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
+                var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+                var appConfig = await _settingCollection.Find(d => d.Key == "appKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+                var phoneCS = await _settingCollection.Find(d => d.Key == "CS").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+                var emailBody = BannerData.IdUser + $"#Saldo#" + BannerData.Price + $"#UniqueCode#" + BannerData.UniqueCode + $"#Bukti Transfer => " + item.Image;
+                try
+                {
+                    using (var httpClient = new HttpClient())
+                    {
+                        var form = new MultipartFormDataContent();
+                        form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
+                        form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
+                        form.Add(new StringContent(phoneCS.Value ?? string.Empty), "to");
+                        form.Add(new StringContent(emailBody), "message");
+
+                        var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            BannerData.Status = item.Status;
+                            BannerData.Image = item.Image ?? BannerData.Image;
+                            await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
+                            return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
+                        }
+                        else
+                        {
+                            return $"Failed to send OTP. Response: {result}";
+                        }
+                    }
+                }
+                catch (CustomException)
+                {
+                    throw;
+                }
             }
             catch (CustomException)
             {
