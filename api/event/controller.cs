@@ -62,6 +62,22 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("List/{id}")]
+        public async Task<object> GetListById([FromRoute] string id)
+        {
+            try
+            {
+                var data = await _IEventService.GetListById(id);
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         // [Authorize]
         [HttpPost]
         public async Task<object> Post([FromBody] CreateEventDto item)
