@@ -62,7 +62,7 @@ namespace RepositoryPattern.Services.OrderService
                     Status = "Pending",
                     Price = item.Price,
                     UniqueCode = randomDigits,
-                    Desc = item.Desc,
+                    Image = item.Image,
                     IsActive = true,
                     IsVerification = false,
                     CreatedAt = DateTime.Now
@@ -86,6 +86,7 @@ namespace RepositoryPattern.Services.OrderService
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
                 BannerData.Status = item.Status;
+                BannerData.Image = item.Image ?? BannerData.Image;
                 await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
                 return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
             }

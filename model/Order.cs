@@ -17,7 +17,7 @@ namespace Beres.Shared.Models
         public float? Price { get; set; }
         [BsonElement("UniqueCode")]
         public float? UniqueCode { get; set; }
-        [BsonElement("Desc")]
-        public string? Desc { get; set; }
+        [BsonElement("Image")]
+        public string? Image { get; set; }
     }
 }
