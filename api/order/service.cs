@@ -47,7 +47,7 @@ namespace RepositoryPattern.Services.OrderService
                 {
                     throw new CustomException(400, "Error", "Minimal Top Up Saldo Adalah Rp. 10.000");
                 }
-                var user = await dataUser.Find(x => x.IdUser == idUser && x.Type == "Saldo" && x.Status == "Pending").FirstOrDefaultAsync();
+                var user = await dataUser.Find(x => x.IdUser == idUser && x.Type == "Saldo" && x.Status == "Pending" && x.IsActive == true).FirstOrDefaultAsync();
                 if (user != null)
                 {
                     throw new CustomException(400, "Error", "Kamu Sudah Memiliki Order, Silahkan Selesaikan Pembayaran Sebelumnya");
