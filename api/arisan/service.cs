@@ -86,6 +86,7 @@ namespace RepositoryPattern.Services.ArisanService
                         TargetPay = arisan.TargetAmount,
                         JumlahMember = arisan.MemberArisans?.Count ?? 0,
                         MemberArisan = memberList,
+                        Kenaikan = arisan.Location,
                         Status = arisan.IsAvailable
                     });
                 }
@@ -700,6 +701,7 @@ namespace RepositoryPattern.Services.ArisanService
                 ArisanData.Document = item.Document?.ToList();
                 ArisanData.TargetLot = item.TargetLot;
                 ArisanData.TargetAmount = item.TargetAmount;
+                ArisanData.Location = item.Location;
                 // ArisanData.IsActive = item.IsAvailable;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, ArisanData);
                 return new { code = 200, id = ArisanData.Id.ToString(), message = "Data Updated" };

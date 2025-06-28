@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using Beres.Shared.Models;
+using Google.Cloud.Location;
 
 namespace RepositoryPattern.Services.PatunganService
 {
@@ -85,6 +86,7 @@ namespace RepositoryPattern.Services.PatunganService
                         TargetPay = Patungan.TargetAmount,
                         JumlahMember = Patungan.MemberPatungans?.Count ?? 0,
                         MemberPatungan = memberList,
+                        Kenaikan = Patungan.Location,
                         Status = Patungan.IsAvailable
                     });
                 }
@@ -698,6 +700,7 @@ namespace RepositoryPattern.Services.PatunganService
                 PatunganData.Document = item.Document?.ToList();
                 PatunganData.TargetLot = item.TargetLot;
                 PatunganData.TargetAmount = item.TargetAmount;
+                PatunganData.Location = item.Location;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, PatunganData);
                 return new { code = 200, id = PatunganData.Id.ToString(), message = "Data Updated" };
             }
