@@ -167,6 +167,7 @@ namespace RepositoryPattern.Services.ArisanService
                     Status = items.IsAvailable,
                     Type = "Arisan",
                     CreatedAt = items.CreatedAt,
+                    Kenaikan = items.Location,
                     StatusMember = new
                     {
                         IsMembership = Ismembership,

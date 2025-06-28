@@ -167,6 +167,7 @@ namespace RepositoryPattern.Services.PatunganService
                     Status = items.IsAvailable,
                     Type = "Patungan",
                     CreatedAt = items.CreatedAt,
+                    Kenaikan = items.Location,
                     StatusMember = new
                     {
                         IsMembership = Ismembership,
