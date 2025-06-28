@@ -47,6 +47,22 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("Admin")]
+        public async Task<object> GetOrder()
+        {
+            try
+            {
+                var data = await _IOrderService.GetOrder();
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         [HttpPost("Saldo")]
         public async Task<object> PostSaldo([FromBody] CreateOrderDto item)
         {
