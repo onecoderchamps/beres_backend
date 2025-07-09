@@ -414,29 +414,6 @@ namespace RepositoryPattern.Services.PatunganService
                 {
                     throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
-                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
-                var member = cekDbPatungan.MemberPatungans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
-                if (member == null)
-                {
-                    throw new CustomException(404, "Not Found", "Data member Patungan tidak ditemukan.");
-                }
-                // Kurangi saldo user
-                roleData.Balance += cekDbPatungan.TargetAmount * member.JumlahLot ?? 0;
-                await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
-                // Buat transaksi baru  
-                var transaksi = new Transaksi
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    IdUser = idUser,
-                    IdTransaksi = cekDbPatungan.Id,
-                    Type = "Patungan",
-                    Nominal = cekDbPatungan.TargetAmount * member.JumlahLot,
-                    Ket = "Refund Patungan",
-                    Status = "Income",
-                    CreatedAt = DateTime.Now
-                };
-                await dataTransaksi.InsertOneAsync(transaksi);
-
                 return new
                 {
                     code = 200,
