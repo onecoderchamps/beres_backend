@@ -12,6 +12,8 @@ public interface IPatunganService
     Task<Object> AddMemberToPatunganByAdmin(CreateMemberPatungan memberPatungan);
     Task<Object> DeleteMemberPatungan(DeleteMemberPatungan memberPatungan);
 
+    Task<Object> RefundPatunganMember(RefundMemberPatungan memberPatungan, string idUser);
+    Task<Object> RefundPatunganMemberbyAdmin(RefundMemberPatungan memberPatungan);
 
 
     Task<Object> Put(string id, CreatePatunganDto items);

@@ -22,6 +22,13 @@ public class CreateMemberPatungan
     public bool IsPayed { get; set; } = false;
 }
 
+public class RefundMemberPatungan
+{
+    public string? Id { get; set; }
+    public string? IdUser { get; set; }
+    public string? IdPatungan { get; set; }
+}
+
 public class CreateBannerPatungan
 {
     public string? IdPatungan { get; set; }

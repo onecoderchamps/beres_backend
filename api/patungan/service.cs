@@ -339,6 +339,119 @@ namespace RepositoryPattern.Services.PatunganService
                 throw new CustomException(500, "Internal Server Error", ex.Message);
             }
         }
+        
+        public async Task<object> RefundPatunganMemberbyAdmin(RefundMemberPatungan id)
+        {
+            try
+            {
+                var filter = Builders<Patungan>.Filter.Eq(a => a.Id, id.IdPatungan);
+                var cekDbPatungan = await dataUser.Find(filter).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
+                {
+                    throw new CustomException(404, "Error", "Data Patungan tidak ditemukan.");
+                }
+                var roleData = await User.Find(x => x.Phone == id.IdUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var member = cekDbPatungan.MemberPatungans?.FirstOrDefault(m => m.IdUser == id.IdUser && m.IsActive);
+                if (member == null)
+                {
+                    throw new CustomException(404, "Error", "Data member Patungan tidak ditemukan.");
+                }
+                 // Buat filter untuk menarik member dengan IdUser yang ingin dihapus
+                var memberFilter = Builders<MemberPatungan>.Filter.And(
+                    Builders<MemberPatungan>.Filter.Eq(m => m.IdUser, id.IdUser),
+                    Builders<MemberPatungan>.Filter.Eq(m => m.Id, id.Id)
+                );
+
+                var update = Builders<Patungan>.Update.PullFilter(a => a.MemberPatungans, memberFilter);
+
+
+                var result = await dataUser.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    throw new CustomException(400, "Error", "Member tidak ditemukan dalam Patungan.");
+                }
+                // Kurangi saldo user
+                roleData.Balance += cekDbPatungan.TargetAmount * member.JumlahLot ?? 0;
+                await User.ReplaceOneAsync(x => x.Phone == id.IdUser, roleData);
+                // Buat transaksi baru  
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = id.IdUser,
+                    IdTransaksi = cekDbPatungan.Id,
+                    Type = "Patungan",
+                    Nominal = cekDbPatungan.TargetAmount * member.JumlahLot,
+                    Ket = "Refund Patungan",
+                    Status = "Income",
+                    CreatedAt = DateTime.Now
+                };
+                await dataTransaksi.InsertOneAsync(transaksi);
+
+
+                return new
+                {
+                    code = 200,
+                    message = "Cek pembayaran berhasil."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
+
+        public async Task<object> RefundPatunganMember(RefundMemberPatungan id, string idUser)
+        {
+            try
+            {
+                var cekDbPatungan = await dataUser.Find(_ => _.Id == id.IdPatungan).FirstOrDefaultAsync();
+                if (cekDbPatungan == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
+                }
+                var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var member = cekDbPatungan.MemberPatungans?.FirstOrDefault(m => m.IdUser == idUser && m.IsActive);
+                if (member == null)
+                {
+                    throw new CustomException(404, "Not Found", "Data member Patungan tidak ditemukan.");
+                }
+                // Kurangi saldo user
+                roleData.Balance += cekDbPatungan.TargetAmount * member.JumlahLot ?? 0;
+                await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
+                // Buat transaksi baru  
+                var transaksi = new Transaksi
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    IdUser = idUser,
+                    IdTransaksi = cekDbPatungan.Id,
+                    Type = "Patungan",
+                    Nominal = cekDbPatungan.TargetAmount * member.JumlahLot,
+                    Ket = "Refund Patungan",
+                    Status = "Income",
+                    CreatedAt = DateTime.Now
+                };
+                await dataTransaksi.InsertOneAsync(transaksi);
+
+                return new
+                {
+                    code = 200,
+                    message = "Cek pembayaran berhasil."
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(500, "Internal Server Error", ex.Message);
+            }
+        }
 
         public async Task<object> PayCompletePatungan(CreatePaymentPatungan2 id, string idUser)
         {
@@ -350,7 +463,7 @@ namespace RepositoryPattern.Services.PatunganService
                     throw new CustomException(404, "Not Found", "Data Patungan tidak ditemukan.");
                 }
                 var roleData = await User.Find(x => x.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
-                if(roleData.IdRole != "2")
+                if (roleData.IdRole != "2")
                 {
                     throw new CustomException(400, "Error", "Hanya admin yang dapat melakukan pembayaran Patungan.");
                 }
