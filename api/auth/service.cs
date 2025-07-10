@@ -196,7 +196,19 @@ namespace RepositoryPattern.Services.AuthService
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
                 );
 
+                var startOfMonthPayed = new DateTime(now.Year, now.Month, 1);
+                var endOfMonthPayed = startOfMonthPayed.AddMonths(1).AddTicks(-1);
                 var existingTransaction = await Transaksi.Find(filter).FirstOrDefaultAsync();
+
+                var filterBulanan = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiBulanan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonthPayed),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonthPayed)
+                );
+
+                var existingTransactionBulanan = await Transaksi.Find(filterBulanan).FirstOrDefaultAsync();
+                
                 var user = new ModelViewUser
                 {
                     Phone = roleData.Phone,
@@ -207,6 +219,7 @@ namespace RepositoryPattern.Services.AuthService
                     Image = roleData.Image,
                     Email = roleData.Email,
                     IsMember = existingTransaction != null,
+                    IsPayMonthly = existingTransactionBulanan != null,
                     Role = roleData.IdRole,
                 };
                 return new { code = 200, Id = roleData.Id, Data = user };
@@ -229,6 +242,8 @@ namespace RepositoryPattern.Services.AuthService
         public string? Image { get; set; }
         public string? Email { get; set; }
         public bool? IsMember { get; set; }
+        public bool? IsPayMonthly { get; set; }
+
         public string? Role { get; set; }
 
 
