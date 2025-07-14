@@ -18,7 +18,7 @@ namespace Beres.Server.Controllers
             _ConvertJwt = convert;
         }
 
-        [HttpPost("sendWA")]
+        [HttpPost("sendChatCS")]
         public async Task<IActionResult> SendChatWA([FromBody] CreateChatDto dto)
         {
             try
@@ -39,13 +39,20 @@ namespace Beres.Server.Controllers
             }
         }
 
-        [HttpPost("getWA")]
-        public async Task<IActionResult> GetChatWA([FromBody] GetChatDto dto)
+        [HttpGet("getChatCS")]
+        public async Task<IActionResult> GetChatWA()
         {
             try
             {
-                var result = await _ChatService.GetChatWAAsync(dto);
-                return Ok(new { message = result });
+                var claims = User.Claims;
+                if (claims == null)
+                {
+                    return Unauthorized(new { code = 400, error = "Error", message = "Unauthorized" });
+                }
+                string accessToken = HttpContext.Request.Headers["Authorization"];
+                string idUser = await _ConvertJwt.ConvertString(accessToken);
+                var result = await _ChatService.GetChatWAAsync(idUser);
+                return Ok(result);
             }
             catch (Exception ex)
             {
