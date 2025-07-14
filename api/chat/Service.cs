@@ -52,6 +52,26 @@ namespace RepositoryPattern.Services.ChatService
                 };
                 await _ChatCollection.InsertOneAsync(userMessage);
 
+                var currentChat = await _ChatCollection
+                    .Find(x => x.IdOrder == idUser && x.Sender == "AI")
+                    .SortByDescending(x => x.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                var contentChat = "";
+
+                if (currentChat == null || string.IsNullOrEmpty(currentChat.Message))
+                {
+                    contentChat = dto.Message;
+                }
+                else if (currentChat.Message.Length <= 20)
+                {
+                    contentChat = dto.Message;
+                }
+                else
+                {
+                    contentChat = "balas dengan limit token 20, dengan pertanyaan :" + dto.Message + " dan jangan lupa untuk menjawab dengan bahasa Indonesia" ;
+                }
+
                 // Siapkan payload ke OpenAI
                 var openAiPayload = new
                 {
@@ -59,7 +79,7 @@ namespace RepositoryPattern.Services.ChatService
                     store = true,
                     messages = new[]
                     {
-                        new { role = "user", content = "tolong balas dengan limit token 20 saja dengan pertanyaan :" + dto.Message }
+                        new { role = "user", content = contentChat }
                     }
                 };
 
