@@ -11,7 +11,7 @@ namespace RepositoryPattern.Services.ChatService
     {
         private readonly IMongoCollection<ChatModel> _ChatCollection;
         private readonly IMongoCollection<User> _userCollection;
-        private readonly string _openAiToken;
+        private readonly IMongoCollection<Setting> _settingCollection;
 
         public ChatService(IConfiguration configuration)
         {
@@ -19,7 +19,7 @@ namespace RepositoryPattern.Services.ChatService
             var database = mongoClient.GetDatabase("beres");
             _ChatCollection = database.GetCollection<ChatModel>("Chat");
             _userCollection = database.GetCollection<User>("User");
-            _openAiToken = configuration.GetValue<string>("ConnectionURIOpenAPI");
+            _settingCollection = database.GetCollection<Setting>("Setting");
         }
 
         public async Task<object> SendChatWAAsync(string idUser, CreateChatDto dto)
@@ -28,6 +28,12 @@ namespace RepositoryPattern.Services.ChatService
             {
                 var roleData = await _userCollection.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
                 if (roleData == null)
+                {
+                    return new { code = 404, message = "User not found" };
+                }
+
+                var openAPI = await _settingCollection.Find(x => x.Key == "OpenAPI").FirstOrDefaultAsync();
+                if (openAPI == null)
                 {
                     return new { code = 404, message = "User not found" };
                 }
@@ -58,7 +64,7 @@ namespace RepositoryPattern.Services.ChatService
                 };
 
                 using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _openAiToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAPI.Value);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
                 var jsonContent = JsonConvert.SerializeObject(openAiPayload);
