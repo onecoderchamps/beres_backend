@@ -531,13 +531,13 @@ namespace RepositoryPattern.Services.PatunganService
                 }
 
                 // Cek apakah member dengan ID atau nomor telepon sudah ada
-                var isExistingMember = Patungan.MemberPatungans != null && Patungan.MemberPatungans.Any(m =>
-                    m.IdUser == newMember.IdUser || m.PhoneNumber == newMember.PhoneNumber);
+                // var isExistingMember = Patungan.MemberPatungans != null && Patungan.MemberPatungans.Any(m =>
+                //     m.IdUser == newMember.IdUser || m.PhoneNumber == newMember.PhoneNumber);
 
-                if (isExistingMember)
-                {
-                    throw new CustomException(400, "Error", "Member sudah terdaftar dalam Patungan ini.");
-                }
+                // if (isExistingMember)
+                // {
+                //     throw new CustomException(400, "Error", "Member sudah terdaftar dalam Patungan ini.");
+                // }
 
                 await PayPatunganFirst(new CreatePaymentPatungan
                 {
