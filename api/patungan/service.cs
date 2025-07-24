@@ -589,21 +589,21 @@ namespace RepositoryPattern.Services.PatunganService
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
                 }
                 // Cek apakah transaksi Patungan bulan ini sudah ada
-                var now = DateTime.Now;
-                var startOfMonth = new DateTime(now.Year, now.Month, 1);
-                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-                var filter = Builders<Transaksi>.Filter.And(
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbPatungan.Id),
-                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
-                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
-                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
-                );
-                var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
-                if (existingTransaction != null)
-                {
-                    throw new CustomException(400, "Error", "Transaksi Patungan bulan ini sudah ada.");
-                }
+                // var now = DateTime.Now;
+                // var startOfMonth = new DateTime(now.Year, now.Month, 1);
+                // var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                // var filter = Builders<Transaksi>.Filter.And(
+                //     Builders<Transaksi>.Filter.Eq(_ => _.IdTransaksi, cekDbPatungan.Id),
+                //     Builders<Transaksi>.Filter.Eq(_ => _.Type, "Patungan"),
+                //     Builders<Transaksi>.Filter.Eq(_ => _.IdUser, idUser),
+                //     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
+                //     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
+                // );
+                // var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
+                // if (existingTransaction != null)
+                // {
+                //     throw new CustomException(400, "Error", "Transaksi Patungan bulan ini sudah ada.");
+                // }
                 // Kurangi saldo user
                 roleData.Balance -= cekDbPatungan.TargetAmount * lot ?? 0;
                 await User.ReplaceOneAsync(x => x.Phone == idUser, roleData);
