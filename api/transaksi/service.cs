@@ -71,6 +71,36 @@ namespace RepositoryPattern.Services.TransaksiService
             }
         }
 
+        public async Task<object> GetKoperasi()
+        {
+            try
+            {
+                var items = await dataUser
+                    .Find(_ => _.Type == "KoperasiBulanan" || _.Type == "KoperasiTahunan")
+                    .SortByDescending(_ => _.CreatedAt)
+                    .ToListAsync();
+
+                // Hitung total Koperasi berdasarkan status
+                var totalKoperasi = items.Sum(item =>
+                    item.Status == "Income" ? item.Nominal :
+                    item.Status == "Expense" ? -item.Nominal : 0
+                );
+                    
+
+                return new
+                {
+                    code = 200,
+                    data = items,
+                    message = "Data Add Complete",
+                    totalKoperasi
+                };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
 
 
         public async Task<Object> GetById(string id)

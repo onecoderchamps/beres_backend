@@ -79,6 +79,22 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("/api/v1/Koperasi")]
+        public async Task<object> GetKoperasi()
+        {
+            try
+            {
+                var data = await _ITransaksiService.GetKoperasi();
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<object> GetById([FromRoute] string id)
         {
