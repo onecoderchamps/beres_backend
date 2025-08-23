@@ -58,6 +58,34 @@ namespace Trasgo.Server.Controllers
             }
         }
 
+        [HttpGet("MemberKoperasi")]
+        public async Task<object> GetMember()
+        {
+            try
+            {
+                if (!IsClaimsValid())
+                {
+                    throw new CustomException(400, "Error", "Unauthorized");
+                }
+
+                string idUser = await GetUserIdFromJwtAsync();
+
+                if (!await IsUserRoleAllowedAsync(idUser))
+                {
+                    throw new CustomException(400, "Error", "Account not allowed");
+                }
+
+                var data = await _IUserService.GetMember();
+                return Ok(data);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
         // [HttpGet("{id}")]
         // public async Task<object> GetById([FromRoute] string id)
         // {

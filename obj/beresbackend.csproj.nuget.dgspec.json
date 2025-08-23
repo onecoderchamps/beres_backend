@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/hilmanzu/Documents/beres/beresbackend/beresbackend.csproj": {}
+    "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj": {}
   },
   "projects": {
-    "/home/hilmanzu/Documents/beres/beresbackend/beresbackend.csproj": {
+    "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/hilmanzu/Documents/beres/beresbackend/beresbackend.csproj",
+        "projectUniqueName": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj",
         "projectName": "beresbackend",
-        "projectPath": "/home/hilmanzu/Documents/beres/beresbackend/beresbackend.csproj",
-        "packagesPath": "/home/hilmanzu/.nuget/packages/",
-        "outputPath": "/home/hilmanzu/Documents/beres/beresbackend/obj/",
+        "projectPath": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj",
+        "packagesPath": "/Users/hilmanzu/.nuget/packages/",
+        "outputPath": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/hilmanzu/.nuget/NuGet/NuGet.Config"
+          "/Users/hilmanzu/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,6 +32,11 @@
           "warnAsError": [
             "NU1605"
           ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -102,7 +107,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.412/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

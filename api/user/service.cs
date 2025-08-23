@@ -30,6 +30,82 @@ namespace RepositoryPattern.Services.UserService
             }
         }
 
+        public async Task<object> GetMember()
+        {
+            try
+            {
+                var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
+                var memberList = new List<ModelViewUser>();
+
+                foreach (var item in items)
+                {
+                    var aktifasiResult = await Aktifasi(item.Phone);
+                    memberList.Add((ModelViewUser)aktifasiResult);
+                }
+
+                // Filter hanya member aktif
+                var filteredMembers = memberList.Where(x => x.IsMember == true).ToList();
+
+                return new { code = 200, data = filteredMembers, message = "Data Add Complete" };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task<object> Aktifasi(string id)
+        {
+            try
+            {
+                var roleData = await dataUser.Find(x => x.Phone == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                // Cek apakah transaksi koperasi tahunan tahun ini sudah ada
+                var now = DateTime.Now;
+                var startOfYear = new DateTime(now.Year, 1, 1);
+                var endOfYear = new DateTime(now.Year, 12, 31, 23, 59, 59);
+
+                var filter = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiTahunan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfYear),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
+                );
+
+                var startOfMonthPayed = new DateTime(now.Year, now.Month, 1);
+                var endOfMonthPayed = startOfMonthPayed.AddMonths(1).AddTicks(-1);
+                var existingTransaction = await dataTransaksi.Find(filter).FirstOrDefaultAsync();
+
+                var filterBulanan = Builders<Transaksi>.Filter.And(
+                    Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiBulanan"),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonthPayed),
+                    Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonthPayed)
+                );
+
+                var existingTransactionBulanan = await dataTransaksi.Find(filterBulanan).FirstOrDefaultAsync();
+
+                var user = new ModelViewUser
+                {
+                    Phone = roleData.Phone,
+                    FullName = roleData.FullName,
+                    Balance = roleData.Balance,
+                    Point = roleData.Point,
+                    Fcm = roleData.Fcm,
+                    Image = roleData.Image,
+                    Email = roleData.Email,
+                    IsMember = existingTransaction != null,
+                    IsPayMonthly = existingTransactionBulanan != null,
+                    Role = roleData.IdRole,
+                };
+                return user;
+            }
+            catch (CustomException ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<Object> TransferBalance(CreateTransferDto item, string idUser)
         {
             try
@@ -179,6 +255,24 @@ namespace RepositoryPattern.Services.UserService
             {
                 throw;
             }
+        }
+
+        public class ModelViewUser
+        {
+            public string? Id { get; set; }
+            public string? Phone { get; set; }
+            public string? FullName { get; set; }
+            public float? Balance { get; set; }
+            public float? Point { get; set; }
+            public string? Fcm { get; set; }
+            public string? Image { get; set; }
+            public string? Email { get; set; }
+            public bool? IsMember { get; set; }
+            public bool? IsPayMonthly { get; set; }
+
+            public string? Role { get; set; }
+
+
         }
     }
 }
