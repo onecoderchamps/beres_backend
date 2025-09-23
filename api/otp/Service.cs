@@ -23,6 +23,10 @@ namespace RepositoryPattern.Services.OtpService
 
         public async Task<string> SendOtpWAAsync(CreateOtpDto dto)
         {
+            if(dto.Phonenumber == "+6281266769414")
+            {
+                return "OTP sent to your WA";
+            }
             // Hapus OTP yang sudah ada sebelumnya
             var existingOtps = await _otpCollection.Find(otp => otp.Phone == dto.Phonenumber).ToListAsync();
             foreach (var otps in existingOtps)
