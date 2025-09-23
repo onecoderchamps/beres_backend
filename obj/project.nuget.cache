@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "j+sAv8Ay1yI=",
+  "dgSpecHash": "EEkvgxrH2u0=",
   "success": true,
-  "projectFilePath": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj",
+  "projectFilePath": "/Users/hilmanzu/Documents/beres/beres_backend/beresbackend.csproj",
   "expectedPackageFiles": [
     "/Users/hilmanzu/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/Users/hilmanzu/.nuget/packages/dnsclient/1.6.1/dnsclient.1.6.1.nupkg.sha512",

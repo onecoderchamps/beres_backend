@@ -2567,11 +2567,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj",
+      "projectUniqueName": "/Users/hilmanzu/Documents/beres/beres_backend/beresbackend.csproj",
       "projectName": "beresbackend",
-      "projectPath": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/beresbackend.csproj",
+      "projectPath": "/Users/hilmanzu/Documents/beres/beres_backend/beresbackend.csproj",
       "packagesPath": "/Users/hilmanzu/.nuget/packages/",
-      "outputPath": "/Users/hilmanzu/Documents/Documents - MacBook Pro hilmanzu/Beres/beres_backend/obj/",
+      "outputPath": "/Users/hilmanzu/Documents/beres/beres_backend/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/hilmanzu/.nuget/NuGet/NuGet.Config"
@@ -2667,7 +2667,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.412/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.414/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
