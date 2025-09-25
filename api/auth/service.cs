@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Beres.Shared.Models;
+using MongoDB.Bson;
 
 namespace RepositoryPattern.Services.AuthService
 {
@@ -16,6 +17,10 @@ namespace RepositoryPattern.Services.AuthService
     {
         private readonly IMongoCollection<User> dataUser;
         private readonly IMongoCollection<Transaksi> Transaksi;
+        private readonly IMongoCollection<ChatModel> dataChat;
+        private readonly IMongoCollection<Order> dataOrder;
+        private readonly IMongoCollection<Patungan> Patungans;
+
         private readonly IMongoCollection<Setting3> Setting;
 
         private readonly string key;
@@ -26,26 +31,88 @@ namespace RepositoryPattern.Services.AuthService
             MongoClient client = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
             IMongoDatabase database = client.GetDatabase("beres");
             dataUser = database.GetCollection<User>("User");
+            dataChat = database.GetCollection<ChatModel>("Chat");
+            dataOrder = database.GetCollection<Order>("Order");
             Transaksi = database.GetCollection<Transaksi>("Transaksi");
+            Patungans = database.GetCollection<Patungan>("Patungan");
             Setting = database.GetCollection<Setting3>("Setting");
-
             this.key = configuration.GetSection("AppSettings")["JwtKey"];
             _logger = logger;
         }
 
         public async Task<object> DeleteAccount(string idUser)
         {
-            try{
-                var user = await dataUser.Find(u => u.Phone == idUser).FirstOrDefaultAsync();
-                if(user == null)
+            try
+            {
+                // Buat dua kemungkinan format nomor
+                string idUser62 = idUser;
+                string idUser0 = idUser;
+
+                if (idUser.StartsWith("+62"))
+                {
+                    idUser0 = "0" + idUser.Substring(3); // +62... -> 0...
+                }
+                else if (idUser.StartsWith("0"))
+                {
+                    idUser62 = "+62" + idUser.Substring(1); // 0... -> +62...
+                }
+
+                // Cari user dengan salah satu format
+                var filter = Builders<User>.Filter.Or(
+                    Builders<User>.Filter.Eq(u => u.Phone, idUser62),
+                    Builders<User>.Filter.Eq(u => u.Phone, idUser0)
+                );
+
+                var user = await dataUser.Find(filter).FirstOrDefaultAsync();
+                if (user == null)
                 {
                     throw new CustomException(400, "Data", "User not found");
                 }
-                await dataUser.DeleteOneAsync(u => u.Phone == idUser);
-                return "Account deleted successfully";
+
+                // Hapus user (pakai filter yang sama)
+                await dataUser.DeleteOneAsync(filter);
+
+                // Update data terkait (pakai kedua kemungkinan IdUser)
+                var filterChat = Builders<ChatModel>.Filter.Or(
+                    Builders<ChatModel>.Filter.Eq(c => c.IdUser, idUser62),
+                    Builders<ChatModel>.Filter.Eq(c => c.IdUser, idUser0)
+                );
+                await dataChat.UpdateManyAsync(filterChat, Builders<ChatModel>.Update.Set(c => c.IdUser, null));
+
+                var filterOrder = Builders<Order>.Filter.Or(
+                    Builders<Order>.Filter.Eq(o => o.IdUser, idUser62),
+                    Builders<Order>.Filter.Eq(o => o.IdUser, idUser0)
+                );
+                await dataOrder.UpdateManyAsync(filterOrder, Builders<Order>.Update.Set(o => o.IdUser, null));
+
+                var filterTrans = Builders<Transaksi>.Filter.Or(
+                    Builders<Transaksi>.Filter.Eq(t => t.IdUser, idUser62),
+                    Builders<Transaksi>.Filter.Eq(t => t.IdUser, idUser0)
+                );
+                await Transaksi.UpdateManyAsync(filterTrans, Builders<Transaksi>.Update.Set(t => t.IdUser, null));
+
+                var filterPatungan = Builders<Patungan>.Filter.ElemMatch(
+                    s => s.MemberPatungans,
+                    mp => mp.IdUser == idUser
+                );
+                var update = Builders<Patungan>.Update
+                .Set("MemberPatungans.$[elem].IdUser", (string?)null)       // atau "deleted"
+                .Set("MemberPatungans.$[elem].PhoneNumber", (string?)null); 
+                var options = new UpdateOptions
+                {
+                    ArrayFilters = new List<ArrayFilterDefinition>
+                    {
+                        new JsonArrayFilterDefinition<BsonDocument>("{ 'elem.IdUser': '" + idUser + "' }")
+                    }
+                };
+
+                await Patungans.UpdateManyAsync(filterPatungan, update, options);
+
+                return new { code = 200, message = "Account deleted successfully" };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error deleting account {IdUser}", idUser);
                 throw new CustomException(400, "Message", "Failed to delete account");
             }
         }
@@ -225,7 +292,7 @@ namespace RepositoryPattern.Services.AuthService
                 );
 
                 var existingTransactionBulanan = await Transaksi.Find(filterBulanan).FirstOrDefaultAsync();
-                
+
                 var user = new ModelViewUser
                 {
                     Phone = roleData.Phone,
