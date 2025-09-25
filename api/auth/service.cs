@@ -33,6 +33,23 @@ namespace RepositoryPattern.Services.AuthService
             _logger = logger;
         }
 
+        public async Task<object> DeleteAccount(string idUser)
+        {
+            try{
+                var user = await dataUser.Find(u => u.Phone == idUser).FirstOrDefaultAsync();
+                if(user == null)
+                {
+                    throw new CustomException(400, "Data", "User not found");
+                }
+                await dataUser.DeleteOneAsync(u => u.Phone == idUser);
+                return "Account deleted successfully";
+            }
+            catch (Exception)
+            {
+                throw new CustomException(400, "Message", "Failed to delete account");
+            }
+        }
+
         public async Task<object> UpdatePin(string id, UpdatePinDto item)
         {
             try
