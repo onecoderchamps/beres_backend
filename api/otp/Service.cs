@@ -108,7 +108,7 @@ namespace RepositoryPattern.Services.OtpService
                     IdRole = "1",
                     FullName = "User Beres",
                     Email = "",
-                    Image = "https://beres-backend-609517395039.asia-southeast2.run.app/api/v1/file/review/68333845226d836a9b5eb15c",
+                    Image = "https://apiberes.coderchamps.co.id/api/v1/file/review/68d5c0e92e32a3ea197dc11d",
                     Pin = "",
                     Balance = 0,
                     Point = 0,
