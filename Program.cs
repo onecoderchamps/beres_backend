@@ -20,6 +20,7 @@ using RepositoryPattern.Services.BannerService;
 using RepositoryPattern.Services.SettingService;
 using RepositoryPattern.Services.EventService;
 using RepositoryPattern.Services.OrderService;
+using RepositoryPattern.Services.RedPayService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISettingService, SettingService>();
 builder.Services.AddScoped<IRekeningService, RekeningService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IRedPayService, RedPayService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
