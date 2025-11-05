@@ -1,19 +1,40 @@
 public class CreateRedpayDto
 {
-    public string Redirect_Url { get; set; }
-    public string User_Id { get; set; }
-    public string User_Mdn { get; set; }
-    public string Merchant_Transaction_Id { get; set; }
-    public string Payment_Method { get; set; }
-    public string Currency { get; set; }
-    public int Amount { get; set; }
-    public string Item_Id { get; set; }
-    public string Item_Name { get; set; }
-    public string Notification_Url { get; set; }
+    public string Company { get; set; }
+    public string Category { get; set; }
+    public string Website { get; set; }
+    public string PhoneNumber { get; set; }
+    public string Email { get; set; }
+    public string? PaymentMethod { get; set; }
+    public List<CreateMemberOrder>? MemberOrder { get; set; }
+}
+
+public class CreateMemberOrder
+{
+    public string? IdUser { get; set; }
+    public string? FullName { get; set; }
+    public string? Position { get; set; }
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
 }
 
 public class GetRedpayDto
 {
     public string? IdOrder { get; set; }
 
+}
+
+public class TransactionData
+{
+    public string message { get; set; }
+    public string payment_url { get; set; }
+    public string va { get; set; }
+    public string retcode { get; set; }
+    public bool success { get; set; }
+    public string transaction_id { get; set; }
+}
+
+public class TransactionResponse
+{
+    public TransactionData data { get; set; }
 }

@@ -6,10 +6,30 @@ namespace Beres.Shared.Models
 {
     public class RedPayModel : BaseModel
     {
-         [BsonId]
+        [BsonId]
         public string? Id { get; set; }
 
-        [BsonElement("IdUser")]
-        public string? IdUser { get; set; }
+        [BsonElement("Company")]
+        public string? Company { get; set; }
+        [BsonElement("Category")]
+        public string? Category { get; set; }
+        [BsonElement("Website")]
+        public string? Website { get; set; }
+        [BsonElement("PhoneNumber")]
+        public string? PhoneNumber { get; set; }
+        [BsonElement("PaymentMethod")]
+        public string? PaymentMethod { get; set; }
+        [BsonElement("Email")]
+        public string? Email { get; set; }
+        [BsonElement("Amount")]
+        public int? Amount { get; set; }
+        [BsonElement("Qty")]
+        public int? Qty { get; set; }
+        [BsonElement("ReferenceId")]
+        public string? ReferenceId { get; set; }
+
+
+        [BsonElement("MemberOrder")]
+        public List<CreateMemberOrder>? MemberOrder { get; set; }
     }
 }

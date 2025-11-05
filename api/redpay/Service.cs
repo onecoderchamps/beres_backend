@@ -18,7 +18,7 @@ namespace RepositoryPattern.Services.RedPayService
         public RedPayService(IConfiguration configuration)
         {
             var mongoClient = new MongoClient(configuration.GetConnectionString("ConnectionURI"));
-            var database = mongoClient.GetDatabase("beres");
+            var database = mongoClient.GetDatabase("redpay");
             _RedPayCollection = database.GetCollection<RedPayModel>("RedPay");
             _userCollection = database.GetCollection<User>("User");
             _settingCollection = database.GetCollection<Setting>("Setting");
@@ -51,31 +51,78 @@ namespace RepositoryPattern.Services.RedPayService
         {
             try
             {
+                string id = Guid.NewGuid().ToString();
+                int amountBasic = 10000;
+
                 var requestBody = new
                 {
                     redirect_url = "https://merchant.com/return",
-                    user_id = "20250209TEST3477000000",
-                    user_mdn = "08123412451",
-                    merchant_transaction_id = "TESTSH0000011",
-                    payment_method = "indosat_airtime",
+                    user_id = dto.Company,
+                    user_mdn = dto.PhoneNumber,
+                    merchant_transaction_id = id,
+                    payment_method = dto.PaymentMethod,
                     currency = "IDR",
-                    amount = 10000,
-                    item_id = "3322",
+                    amount = amountBasic * dto.MemberOrder!.Count,
+                    item_id = "1",
                     item_name = "PAYMENT",
-                    notification_url = "https://apiimpact.coderchamps.co.id/api/v1/redpay/verifCampaign"
+                    customer_name = dto.Company,
+                    notification_url = "https://apiimpact.coderchamps.co.id/api/v1/redpay/approved",
                 };
                 string jsonBody = JsonSerializer.Serialize(requestBody);
+                string bodySign = GenerateBodySign(requestBody, "ee9Kpp-tBUmRRFM");
 
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Add("appkey", "c3X9c-_RLJ1AQkFX_1yUgg");
                 httpClient.DefaultRequestHeaders.Add("appid", "0ChSmgeTWqy5M_n2vKWm0Q");
-                string bodySign = GenerateBodySign(requestBody, "ee9Kpp-tBUmRRFM");
                 httpClient.DefaultRequestHeaders.Add("bodysign", bodySign);
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await httpClient.PostAsync("https://sandbox-payment.redision.com/api/transaction", content);
                 string responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(responseContent); 
+                using JsonDocument doc = JsonDocument.Parse(responseContent);
+                JsonElement root = doc.RootElement;
+                string paymentUrl = "";
 
-                return new { code = 200, data = responseContent };
+                if (dto.PaymentMethod == "visa_master")
+                {
+                    paymentUrl = root.GetProperty("data").GetProperty("payment_url").GetString() ?? "";
+                } else if (dto.PaymentMethod == "qris")
+                {
+                    paymentUrl = root.GetProperty("qrisUrl").GetString() ?? "";
+                }
+                else
+                {
+                    paymentUrl = root.GetProperty("data").GetProperty("va").GetString() ?? "";
+                }
+
+
+                var transaction = new RedPayModel
+                {
+                    Id = id,
+                    Company = dto.Company,
+                    Category = dto.Category,
+                    Website = dto.Website,
+                    PhoneNumber = dto.PhoneNumber,
+                    PaymentMethod = dto.PaymentMethod,
+                    Email = dto.Email,
+                    Amount = amountBasic * dto.MemberOrder!.Count,
+                    Qty = dto.MemberOrder!.Count,
+                    MemberOrder = dto.MemberOrder,
+                    IsActive = false,
+                    IsVerification = false,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    // ReferenceId = result.Data.Transaction_Id
+                };
+
+                await _RedPayCollection.InsertOneAsync(transaction);
+
+                return new
+                {
+                    code = 200,
+                    data = responseContent,
+                    paymentUrl = paymentUrl,
+                };
             }
             catch (CustomException)
             {
