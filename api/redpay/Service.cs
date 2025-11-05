@@ -66,7 +66,7 @@ namespace RepositoryPattern.Services.RedPayService
                     item_id = "1",
                     item_name = "PAYMENT",
                     customer_name = dto.Company,
-                    notification_url = "https://apiimpact.coderchamps.co.id/api/v1/redpay/approved",
+                    notification_url = "https://apiberes.coderchamps.co.id/api/v1/redpay/approved",
                 };
                 string jsonBody = JsonSerializer.Serialize(requestBody);
                 string bodySign = GenerateBodySign(requestBody, "ee9Kpp-tBUmRRFM");
