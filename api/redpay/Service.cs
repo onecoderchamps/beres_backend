@@ -144,6 +144,10 @@ namespace RepositoryPattern.Services.RedPayService
                 {
                     throw new CustomException(400, "Error", "Data Not Found");
                 }
+                if(item.status != "success")
+                {
+                    throw new CustomException(400, "Error", "Payment Not Successful");
+                }
                 campaign.IsVerification = true;
                 await _RedPayCollection.ReplaceOneAsync(x => x.Id == merchantOrderId, campaign);
                 return new
