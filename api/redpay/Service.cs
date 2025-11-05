@@ -61,7 +61,7 @@ namespace RepositoryPattern.Services.RedPayService
                     user_mdn = dto.PhoneNumber,
                     merchant_transaction_id = id,
                     payment_method = dto.PaymentMethod,
-                    currency = "IDR",
+                    currency = dto.Currency ?? "IDR",
                     amount = amountBasic * dto.MemberOrder!.Count,
                     item_id = "1",
                     item_name = "PAYMENT",

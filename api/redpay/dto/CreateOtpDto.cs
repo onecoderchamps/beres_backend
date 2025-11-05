@@ -6,6 +6,8 @@ public class CreateRedpayDto
     public string PhoneNumber { get; set; }
     public string Email { get; set; }
     public string? PaymentMethod { get; set; }
+    public string? Currency { get; set; }
+
     public List<CreateMemberOrder>? MemberOrder { get; set; }
 }
 

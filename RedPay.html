@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedPay Demo - Dynamic Members</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-6 text-center text-red-600">RedPay - Create Order</h1>
+
+    <form id="orderForm" class="space-y-4">
+
+      <!-- Informasi Perusahaan -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Perusahaan</label>
+          <input name="company" type="text" class="w-full border rounded px-3 py-2" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+          <input name="category" type="text" class="w-full border rounded px-3 py-2" required>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+          <input name="website" type="text" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
+          <input name="phoneNumber" type="tel" class="w-full border rounded px-3 py-2" required>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input name="email" type="email" class="w-full border rounded px-3 py-2" required>
+      </div>
+
+      <!-- Metode Pembayaran -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
+        <select id="paymentMethod" name="paymentMethod" class="w-full border rounded px-3 py-2" required>
+          <option value="">-- Pilih Metode --</option>
+          <option value="visa_master">Visa / MasterCard</option>
+          <option value="va">Virtual Account</option>
+        </select>
+      </div>
+
+      <!-- Pilihan Bank (khusus VA) -->
+      <div id="bankOptions" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Bank</label>
+        <select id="vaBank" class="w-full border rounded px-3 py-2">
+          <option value="">-- Pilih Bank --</option>
+          <option value="va_bca">BCA</option>
+          <option value="va_bri">BRI</option>
+          <option value="va_mandiri">Mandiri</option>
+          <option value="va_bni">BNI</option>
+          <option value="va_permata">Permata</option>
+          <option value="va_sinarmas">Sinarmas</option>
+        </select>
+      </div>
+
+      <!-- Dynamic MemberOrder -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Member Order</label>
+        <div id="membersContainer" class="space-y-2">
+          <!-- Member template akan ditambahkan di sini -->
+        </div>
+        <button type="button" id="addMember" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Tambah Member</button>
+      </div>
+
+      <button type="submit" class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700 w-full mt-4">
+        Buat Transaksi
+      </button>
+    </form>
+
+    <div id="result" class="mt-6 text-center text-gray-800"></div>
+  </div>
+
+  <script>
+    const paymentMethodSelect = document.getElementById("paymentMethod");
+    const bankOptions = document.getElementById("bankOptions");
+    const resultDiv = document.getElementById("result");
+
+    // Show bank options if VA selected
+    paymentMethodSelect.addEventListener("change", () => {
+      bankOptions.classList.toggle("hidden", paymentMethodSelect.value !== "va");
+    });
+
+    const membersContainer = document.getElementById("membersContainer");
+
+    // Fungsi buat menambahkan member baru
+    function addMember(id = Date.now()) {
+      const div = document.createElement("div");
+      div.classList.add("border", "p-3", "rounded", "relative", "bg-gray-50");
+      div.dataset.memberId = id;
+      div.innerHTML = `
+        <button type="button" class="absolute top-2 right-2 text-red-600 hover:text-red-800" onclick="removeMember(${id})">&times;</button>
+        <input name="fullName" placeholder="Nama Lengkap" class="w-full border rounded px-2 py-1 mb-1" required>
+        <input name="position" placeholder="Jabatan" class="w-full border rounded px-2 py-1 mb-1">
+        <input name="email" placeholder="Email" type="email" class="w-full border rounded px-2 py-1 mb-1" required>
+        <input name="phoneNumber" placeholder="Nomor HP" class="w-full border rounded px-2 py-1" required>
+      `;
+      membersContainer.appendChild(div);
+    }
+
+    function removeMember(id) {
+      const div = membersContainer.querySelector(`[data-member-id='${id}']`);
+      if (div) div.remove();
+    }
+
+    document.getElementById("addMember").addEventListener("click", () => addMember());
+
+    // Tambahkan satu member default saat load
+    addMember();
+
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      resultDiv.innerHTML = "⏳ Mengirim data...";
+
+      let paymentMethod = paymentMethodSelect.value;
+      if (paymentMethod === "va") {
+        const vaBank = document.getElementById("vaBank").value;
+        if (!vaBank) {
+          alert("Silakan pilih bank untuk Virtual Account!");
+          return;
+        }
+        paymentMethod = vaBank; // misal va_bca
+      }
+
+      // Ambil form utama
+      const form = e.target;
+      const body = {
+        company: form.company.value,
+        category: form.category.value,
+        website: form.website.value,
+        phoneNumber: form.phoneNumber.value,
+        email: form.email.value,
+        paymentMethod: paymentMethod,
+        memberOrder: []
+      };
+
+      // Ambil semua member
+      membersContainer.querySelectorAll("div[data-member-id]").forEach(memberDiv => {
+        const member = {
+          idUser: "string",
+          fullName: memberDiv.querySelector("input[name='fullName']").value,
+          position: memberDiv.querySelector("input[name='position']").value,
+          email: memberDiv.querySelector("input[name='email']").value,
+          phoneNumber: memberDiv.querySelector("input[name='phoneNumber']").value
+        };
+        body.memberOrder.push(member);
+      });
+
+      try {
+        const res = await fetch("https://apiberes.coderchamps.co.id/api/v1/RedPay/createOrder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "*/*" },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        console.log(data);
+
+        if (data.paymentUrl) {
+          if (paymentMethod.startsWith("va_")) {
+            resultDiv.innerHTML = `<p class="text-green-700 font-semibold">Nomor Virtual Account:</p>
+                                   <p class="text-2xl font-bold">${data.virtualAccount || "Nomor VA tidak tersedia"}</p>`;
+          } else {
+            window.open(data.paymentUrl, "_blank");
+            resultDiv.innerHTML = `<p class="text-green-600">Redirecting ke halaman pembayaran...</p>`;
+          }
+        } else {
+          resultDiv.innerHTML = `<p class="text-red-600">Gagal: tidak ada paymentUrl.</p>`;
+        }
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<p class="text-red-600">Terjadi kesalahan: ${err.message}</p>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
