@@ -112,7 +112,8 @@ namespace RepositoryPattern.Services.RedPayService
                     IsVerification = false,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    ReferenceId = paymentUrl
+                    ReferenceId = paymentUrl,
+                    Delegate = dto.Delegate
                 };
 
                 await _RedPayCollection.InsertOneAsync(transaction);

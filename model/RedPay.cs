@@ -27,6 +27,8 @@ namespace Beres.Shared.Models
         public int? Qty { get; set; }
         [BsonElement("ReferenceId")]
         public string? ReferenceId { get; set; }
+        [BsonElement("Delegate")]
+        public string? Delegate { get; set; }
 
 
         [BsonElement("MemberOrder")]
