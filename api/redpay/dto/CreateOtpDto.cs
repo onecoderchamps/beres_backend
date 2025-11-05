@@ -9,6 +9,12 @@ public class CreateRedpayDto
     public List<CreateMemberOrder>? MemberOrder { get; set; }
 }
 
+public class ApprovedRedpayDto
+{
+    public string? merchant_transaction_id { get; set; }
+    public string? status { get; set; }
+}
+
 public class CreateMemberOrder
 {
     public string? IdUser { get; set; }

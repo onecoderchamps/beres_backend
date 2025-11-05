@@ -134,12 +134,23 @@ namespace RepositoryPattern.Services.RedPayService
             }
         }
 
-        public async Task<object> GetRedPayWAAsync(string idUser)
+        public async Task<object> ApprovedRedPay(ApprovedRedpayDto item)
         {
             try
             {
-
-                return new { code = 200, data = "result" };
+                string merchantOrderId = item.merchant_transaction_id;
+                var campaign = await _RedPayCollection.Find(_ => _.Id == merchantOrderId).FirstOrDefaultAsync();
+                if (campaign == null)
+                {
+                    throw new CustomException(400, "Error", "Data Not Found");
+                }
+                campaign.IsVerification = true;
+                await _RedPayCollection.ReplaceOneAsync(x => x.Id == merchantOrderId, campaign);
+                return new
+                {
+                    code = 200,
+                    request = "Done",
+                };
             }
             catch (CustomException)
             {
