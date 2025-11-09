@@ -8,9 +8,7 @@ public class CreateRedpayDto
     public string? PaymentMethod { get; set; }
     public string? Currency { get; set; }
     public string? Delegate { get; set; }
-
-
-
+    public string? Diskon { get; set; }
     public List<CreateMemberOrder>? MemberOrder { get; set; }
 }
 
@@ -18,6 +16,16 @@ public class ApprovedRedpayDto
 {
     public string? merchant_transaction_id { get; set; }
     public string? status { get; set; }
+}
+
+public class PreviewRedpayDto
+{
+    public double? Amount { get; set; }
+    public double? Participant { get; set; }
+    public string? Delegate { get; set; }
+    public string? Diskon { get; set; }
+
+
 }
 
 public class CreateMemberOrder

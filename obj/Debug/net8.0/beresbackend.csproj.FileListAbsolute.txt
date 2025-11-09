@@ -294,3 +294,4 @@
 /Users/hilmanzu/Documents/beres/beres_backend/obj/Debug/net8.0/beresbackend.pdb
 /Users/hilmanzu/Documents/beres/beres_backend/obj/Debug/net8.0/beresbackend.genruntimeconfig.cache
 /Users/hilmanzu/Documents/beres/beres_backend/obj/Debug/net8.0/ref/beresbackend.dll
+/Users/hilmanzu/Documents/beres/beres_backend/bin/Debug/net8.0/RedPay/firebase.json

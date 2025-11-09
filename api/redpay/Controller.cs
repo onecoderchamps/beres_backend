@@ -75,5 +75,19 @@ namespace Beres.Server.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("previewOrder")]
+        public async Task<IActionResult> previewOrder([FromBody] PreviewRedpayDto dto)
+        {
+            try
+            {
+                var result = await _RedPayService.previewOrder(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
