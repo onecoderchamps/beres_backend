@@ -22,6 +22,8 @@ namespace RepositoryPattern.Services.AuthService
         private readonly IMongoCollection<Patungan> Patungans;
 
         private readonly IMongoCollection<Setting3> Setting;
+        private readonly IMongoCollection<OtpModel> dataOtp;
+
 
         private readonly string key;
         private readonly ILogger<AuthService> _logger;
@@ -33,6 +35,8 @@ namespace RepositoryPattern.Services.AuthService
             dataUser = database.GetCollection<User>("User");
             dataChat = database.GetCollection<ChatModel>("Chat");
             dataOrder = database.GetCollection<Order>("Order");
+            dataOtp = database.GetCollection<OtpModel>("OTP");
+
             Transaksi = database.GetCollection<Transaksi>("Transaksi");
             Patungans = database.GetCollection<Patungan>("Patungan");
             Setting = database.GetCollection<Setting3>("Setting");
@@ -97,7 +101,7 @@ namespace RepositoryPattern.Services.AuthService
                 );
                 var update = Builders<Patungan>.Update
                 .Set("MemberPatungans.$[elem].IdUser", (string?)null)       // atau "deleted"
-                .Set("MemberPatungans.$[elem].PhoneNumber", (string?)null); 
+                .Set("MemberPatungans.$[elem].PhoneNumber", (string?)null);
                 var options = new UpdateOptions
                 {
                     ArrayFilters = new List<ArrayFilterDefinition>
@@ -267,7 +271,7 @@ namespace RepositoryPattern.Services.AuthService
         {
             try
             {
-                var roleData = await dataUser.Find(x => x.Phone == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
+                var roleData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data not found");
                 // Cek apakah transaksi koperasi tahunan tahun ini sudah ada
                 var now = DateTime.Now;
                 var startOfYear = new DateTime(now.Year, 1, 1);
@@ -312,6 +316,108 @@ namespace RepositoryPattern.Services.AuthService
             {
                 throw;
             }
+        }
+
+        public async Task<Object> LoginAsync([FromBody] LoginDto login)
+        {
+            try
+            {
+                var user = await dataUser.Find(u => u.Phone == login.Phone).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    throw new CustomException(400, "Message", "Ponsel tidak ditemukan");
+                }
+                if (user.Pin == null || user.Pin == "")
+                {
+                    throw new CustomException(400, "Message", "Anda belum mengatur PIN, silahkan atur PIN terlebih dahulu");
+                }
+                bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(login.Pin, user.Pin);
+                if (!isPasswordCorrect)
+                {
+                    throw new CustomException(400, "Message", "PIN Salah");
+                }
+                if (user.IsActive == false)
+                {
+                    throw new CustomException(400, "Message", "Akun anda tidak perbolehkan akses");
+                }
+
+                var configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
+                var jwtService = new JwtService(configuration);
+                string userId = user.Id;
+                string token = jwtService.GenerateJwtToken(userId);
+                string idAsString = user.Id.ToString();
+                return new { code = 200, id = idAsString, accessToken = token };
+            }
+            catch (CustomException ex)
+            {
+
+                throw;
+            }
+        }
+
+        public async Task<object> ForgotPasswordAsync(UpdateUserAuthDto dto)
+        {
+            try
+            {
+                var codeOtp = dto.CodeOtp;
+                var newPassword = dto.Pin;
+
+                // Cek OTP di database
+                var userOtp = await dataOtp.Find(x => x.CodeOtp.Equals(dto.CodeOtp, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefaultAsync();
+
+                if (userOtp == null)
+                    throw new CustomException(400, "Message", "Otp not found");
+
+                // Cari user berdasarkan email dari OTP
+                var roleData = await dataUser.Find(x => x.Phone.Equals(userOtp.Phone, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefaultAsync();
+                if (roleData == null)
+                    throw new CustomException(400, "Message", "User not found");
+
+                // Hash password baru
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                roleData.Pin = passwordHash;
+                await dataUser.ReplaceOneAsync(x => x.Id == roleData.Id, roleData);
+                // Hapus OTP setelah berhasil update password
+                await dataOtp.DeleteOneAsync(o => o.Id == userOtp.Id);
+                return new { code = 200, data = "", message = "Pin updated successfully" };
+            }
+            catch (Exception ex)
+            {
+                throw new CustomException(400, "Message", $"PIN Error: {ex.Message}");
+            }
+        }
+        public async Task<object> CheckMail(string email)
+        {
+            try
+            {
+                var userOtp = await dataUser.Find(x => x.Phone == email).FirstOrDefaultAsync();
+                if (userOtp == null)
+                {
+                    throw new CustomException(400, "Message", "Email not registered");
+                }
+                return new { code = 200, data = "", message = "Email is registered" };
+            }
+            catch (Exception ex)
+            {
+
+                throw new CustomException(400, "Message", $"{ex.Message}");
+            }
+        }
+
+        public async Task<object> ValidateOtpAsync(ValidateOtpDto dto)
+        {
+            // Cari OTP berdasarkan email
+            var otp = await dataOtp.Find(o => o.Phone == dto.phone_number).FirstOrDefaultAsync();
+
+            if (otp == null)
+                throw new CustomException(400, "Message", "OTP not found");
+
+            if (otp.CodeOtp != dto.codeOtp)
+                throw new CustomException(400, "Message", "OTP invalid");
+
+            // Hapus OTP setelah validasi
+            // await dataOtp.DeleteOneAsync(o => o.Id == otp.Id);
+            return new { code = 200, data = "", message = "OTP valid" };
         }
     }
 

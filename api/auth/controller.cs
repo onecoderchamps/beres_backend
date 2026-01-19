@@ -121,7 +121,72 @@ namespace Trasgo.Server.Controllers
                 return _errorUtility.HandleError(errorCode, errorResponse);
             }
         }
-        
+
+        [HttpPost]
+        [Route("login")]
+        public async Task<object> Login([FromBody] LoginDto loginDto)
+        {
+            try
+            {
+                var dataList = await _IAuthService.LoginAsync(loginDto);
+                return dataList;
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpPost]
+        [Route("forgot-pin")]
+        public async Task<object> ForgotPassword([FromBody] UpdateUserAuthDto item)
+        {
+            try
+            {
+                var dataList = await _IAuthService.ForgotPasswordAsync(item);
+                return Ok(dataList);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpGet]
+        [Route("check-phone-registered/{phone}")]
+        public async Task<object> CheckMail([FromRoute] string phone)
+        {
+            try
+            {
+                var dataList = await _IAuthService.CheckMail(phone);
+                return Ok(dataList);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpPost("validate")]
+        public async Task<IActionResult> ValidateOtp([FromBody] ValidateOtpDto dto)
+        {
+            try
+            {
+                var result = await _IAuthService.ValidateOtpAsync(dto);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
 
 }

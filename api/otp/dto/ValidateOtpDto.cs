@@ -1,7 +1,7 @@
 public class ValidateOtpDto
 {
-    public string phonenumber { get; set; }
-    public string Code { get; set; }
+    public string phone_number { get; set; }
+    public string codeOtp { get; set; }
 }
 
 public class ValidateUserDto

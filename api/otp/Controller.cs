@@ -28,18 +28,18 @@ namespace Trasgo.Server.Controllers
             }
         }
 
-        [HttpPost("validateWA")]
-        public async Task<IActionResult> ValidateOtpWA([FromBody] ValidateOtpDto dto)
-        {
-            try
-            {
-                var result = await _otpService.ValidateOtpWAAsync(dto);
-                return Ok(new { message = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        // [HttpPost("validateWA")]
+        // public async Task<IActionResult> ValidateOtpWA([FromBody] ValidateOtpDto dto)
+        // {
+        //     try
+        //     {
+        //         var result = await _otpService.ValidateOtpWAAsync(dto);
+        //         return Ok(new { message = result });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return BadRequest(new { message = ex.Message });
+        //     }
+        // }
     }
 }

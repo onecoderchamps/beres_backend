@@ -8,4 +8,14 @@ public interface IAuthService
     Task<Object> UpdateProfile(string id, UpdateProfileDto item);
     Task<Object> UpdateUserProfile(string id, UpdateFCMProfileDto item);
     Task<Object> SendNotif(PayloadNotifSend payloadNotifSend);
+
+    Task<object> LoginAsync(LoginDto login);
+
+    Task<object> ForgotPasswordAsync(UpdateUserAuthDto model);
+    Task<object> CheckMail(string email);
+
+    Task<object> ValidateOtpAsync(ValidateOtpDto dto);
+
+
+
 }

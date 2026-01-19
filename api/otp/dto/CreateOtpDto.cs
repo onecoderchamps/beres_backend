@@ -11,5 +11,5 @@ public class CreateOtpWaDto
 public class UpdateUserAuthDto
 {
     public string CodeOtp { get; set; }
-    public string Password { get; set; }
+    public string Pin { get; set; }
 }
