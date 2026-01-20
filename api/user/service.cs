@@ -110,32 +110,32 @@ namespace RepositoryPattern.Services.UserService
         {
             try
             {
-                var from = await dataUser.Find(_ => _.Phone == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
+                var from = await dataUser.Find(_ => _.Id == idUser).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
                 var destination = await dataUser.Find(_ => _.Phone == item.Phone).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data User Not Found");
                 if (from.Balance == null)
                 {
-                    throw new CustomException(400, "Error", "Saldo anda tidak cukup");
+                    throw new CustomException(400, "Message", "Saldo anda tidak cukup");
                 }
                 if (from.Balance < item.Balance)
                 {
-                    throw new CustomException(400, "Error", "Saldo anda tidak cukup");
+                    throw new CustomException(400, "Message", "Saldo anda tidak cukup");
                 }
                 if (from.Phone == destination.Phone)
                 {
-                    throw new CustomException(400, "Error", "Tidak boleh kirim ke nomor yang sama");
+                    throw new CustomException(400, "Message", "Tidak boleh kirim ke nomor yang sama");
                 }
                 if (item.Balance < 10000)
                 {
-                    throw new CustomException(400, "Error", "Minimal Transfer adalah Rp 10.000");
+                    throw new CustomException(400, "Message", "Minimal Transfer adalah Rp 10.000");
                 }
                 ///update from balance
                 from.Balance -= item.Balance;
-                await dataUser.ReplaceOneAsync(x => x.Phone == idUser, from);
+                await dataUser.ReplaceOneAsync(x => x.Phone == from.Phone, from);
 
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = idUser,
+                    IdUser = from.Id,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "Transfer",
                     Nominal = item.Balance,
@@ -147,11 +147,11 @@ namespace RepositoryPattern.Services.UserService
 
                 ///update destination balance
                 destination.Balance += item.Balance;
-                await dataUser.ReplaceOneAsync(x => x.Phone == item.Phone, destination);
+                await dataUser.ReplaceOneAsync(x => x.Phone == destination.Phone, destination);
                 var transaksi2 = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = item.Phone,
+                    IdUser = destination.Id,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "Transfer",
                     Nominal = item.Balance,
