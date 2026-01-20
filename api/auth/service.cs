@@ -393,9 +393,27 @@ namespace RepositoryPattern.Services.AuthService
                 var userOtp = await dataUser.Find(x => x.Phone == email).FirstOrDefaultAsync();
                 if (userOtp == null)
                 {
-                    throw new CustomException(400, "Message", "Email not registered");
+                    throw new CustomException(400, "Message", "Nomor tidak terdaftar");
                 }
-                return new { code = 200, data = "", message = "Email is registered" };
+                return new { code = 200, data = "", message = "Ponsel sudah terdaftar" };
+            }
+            catch (Exception ex)
+            {
+
+                throw new CustomException(400, "Message", $"{ex.Message}");
+            }
+        }
+
+        public async Task<object> CheckMailRegister(string email)
+        {
+            try
+            {
+                var userOtp = await dataUser.Find(x => x.Phone == email).FirstOrDefaultAsync();
+                if (userOtp != null)
+                {
+                    throw new CustomException(400, "Message", "Ponsel sudah terdaftar");
+                }
+                return new { code = 200, data = "", message = "Nomor tidak terdaftar" };
             }
             catch (Exception ex)
             {
@@ -418,6 +436,47 @@ namespace RepositoryPattern.Services.AuthService
             // Hapus OTP setelah validasi
             // await dataOtp.DeleteOneAsync(o => o.Id == otp.Id);
             return new { code = 200, data = "", message = "OTP valid" };
+        }
+
+        public async Task<object> RegisterAsync([FromBody] RegisterDto data)
+        {
+            try
+            {
+                var user = await dataUser.Find(u => u.Phone == data.Phone).FirstOrDefaultAsync();
+
+                if (user != null)
+                {
+                    throw new CustomException(400, "Message", "Nomor Telepon Sudah digunakan");
+                }
+
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(data.Pin);
+                var uuid = Guid.NewGuid().ToString();
+
+                var roleData = new User()
+                {
+                    Id = uuid,
+                    Pin = hashedPassword,
+                    FullName = data.FullName,
+                    Phone = data.Phone,
+                    Balance = 0,
+                    Point = 0,
+                    Fcm = "",
+                    Image = "",
+                    Email = "",
+                    IsActive = true,
+                    IsVerification = false,
+                    IdRole = Roles.User,
+                    CreatedAt = DateTime.Now,
+                };
+
+                await dataUser.InsertOneAsync(roleData);
+                return new { code = 200, id = uuid, Message = "Register Berhasil Silahkan Login" };
+            }
+            catch (CustomException ex)
+            {
+
+                throw new CustomException(400, "Message", ex.Message); ;
+            }
         }
     }
 

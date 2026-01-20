@@ -31,7 +31,7 @@ public class JwtService
                 new Claim(ClaimTypes.Name, id),
                 new Claim(JwtRegisteredClaimNames.Sub, id),
             }),
-            Expires = DateTime.UtcNow.AddDays(30),
+            Expires = DateTime.UtcNow.AddDays(90),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keys), SecurityAlgorithms.HmacSha256Signature),
             Issuer = "Beres.com",
             Audience = "Beres.com",

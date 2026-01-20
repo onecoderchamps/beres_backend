@@ -140,6 +140,23 @@ namespace Trasgo.Server.Controllers
         }
 
         [HttpPost]
+        [Route("register")]
+        public async Task<object> Register([FromBody] RegisterDto registerDto)
+        {
+            try
+            {
+                var dataList = await _IAuthService.RegisterAsync(registerDto);
+                return dataList;
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpPost]
         [Route("forgot-pin")]
         public async Task<object> ForgotPassword([FromBody] UpdateUserAuthDto item)
         {
@@ -163,6 +180,23 @@ namespace Trasgo.Server.Controllers
             try
             {
                 var dataList = await _IAuthService.CheckMail(phone);
+                return Ok(dataList);
+            }
+            catch (CustomException ex)
+            {
+                int errorCode = ex.ErrorCode;
+                var errorResponse = new ErrorResponse(errorCode, ex.ErrorHeader, ex.Message);
+                return _errorUtility.HandleError(errorCode, errorResponse);
+            }
+        }
+
+        [HttpGet]
+        [Route("check-registered/{phone}")]
+        public async Task<object> CheckMailRegister([FromRoute] string phone)
+        {
+            try
+            {
+                var dataList = await _IAuthService.CheckMailRegister(phone);
                 return Ok(dataList);
             }
             catch (CustomException ex)

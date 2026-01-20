@@ -10,9 +10,13 @@ public interface IAuthService
     Task<Object> SendNotif(PayloadNotifSend payloadNotifSend);
 
     Task<object> LoginAsync(LoginDto login);
+    Task<object> RegisterAsync(RegisterDto registerDto);
 
     Task<object> ForgotPasswordAsync(UpdateUserAuthDto model);
     Task<object> CheckMail(string email);
+    Task<object> CheckMailRegister(string email);
+
+
 
     Task<object> ValidateOtpAsync(ValidateOtpDto dto);
 
