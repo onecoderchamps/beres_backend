@@ -29,6 +29,7 @@ namespace RepositoryPattern.Services.TransaksiService
         {
             try
             {
+                Console.WriteLine("Fetching transactions for user: " + idUser);
                 var items = await dataUser
                     .Find(_ => _.IdUser == idUser)
                     .SortByDescending(_ => _.CreatedAt) // Urutkan dari terbaru ke terlama

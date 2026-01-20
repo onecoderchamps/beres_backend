@@ -55,7 +55,7 @@ namespace RepositoryPattern.Services.OrderService
             try
             {
                 var user = await dataUser.Find(x => x.IdUser == idUser && x.Type == "Saldo" && x.Status == "Pending" && x.IsActive == true).FirstOrDefaultAsync();
-                if(idUser == "+6281266769414")
+                if (idUser == "+6281266769414")
                 {
                     var users = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
 
@@ -111,104 +111,108 @@ namespace RepositoryPattern.Services.OrderService
                 var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var appConfig = await _settingCollection.Find(d => d.Key == "appKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var phoneCS = await _settingCollection.Find(d => d.Key == "CS").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
-                
+
                 string imageUrl = !string.IsNullOrEmpty(item.Image) && item.Image != "null"
                   ? "Bukti Transfer: " + item.Image // Jika ada link, tambahkan label
                   : "Tidak ada bukti transfer";
-                var indonesianCulture = new System.Globalization.CultureInfo("id-ID");
-                string formattedPrice = string.Format(indonesianCulture, "{0:N0}", BannerData.Price);
-                string formattedUniqueCode = string.Format(indonesianCulture, "{0:N0}", BannerData.UniqueCode);
+                // var indonesianCulture = new System.Globalization.CultureInfo("id-ID");
+                // string formattedPrice = string.Format(indonesianCulture, "{0:N0}", BannerData.Price);
+                // string formattedUniqueCode = string.Format(indonesianCulture, "{0:N0}", BannerData.UniqueCode);
 
-                var emailBody = $"Halo Admin, ada topup baru!\n" +
-                $"ID User: {BannerData.IdUser}\n" +
-                $"Jumlah Top Up: Rp {formattedPrice}\n" +
-                $"Kode Unik: {formattedUniqueCode}\n" +
-                $"{imageUrl}";
+                // var emailBody = $"Halo Admin, ada topup baru!\n" +
+                // $"ID User: {BannerData.IdUser}\n" +
+                // $"Jumlah Top Up: Rp {formattedPrice}\n" +
+                // $"Kode Unik: {formattedUniqueCode}\n" +
+                // $"{imageUrl}";
 
-                var emailBodyAccept = $"Halo, kamu menerima saldo sebesar!\n" +
-                $"Jumlah Top Up: Rp {formattedPrice}\n" +
-                $"By Admin Beres\n";
+                // var emailBodyAccept = $"Halo, kamu menerima saldo sebesar!\n" +
+                // $"Jumlah Top Up: Rp {formattedPrice}\n" +
+                // $"By Admin Beres\n";
 
-                var emailBodyReject = $"Halo, topup kamu gagal!\n" +
-                $"Jumlah Top Up: Rp {formattedPrice}\n Silahkan untuk membuat invoice baru \n" +
-                $"By Admin Beres\n";
-                
-                try
-                {
-                    using (var httpClient = new HttpClient())
-                    {
-                        if (item.Status == "Pending")
-                        {
-                            var form = new MultipartFormDataContent();
-                            form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
-                            form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
-                            form.Add(new StringContent(phoneCS.Value ?? string.Empty), "to");
-                            form.Add(new StringContent(emailBody), "message");
+                // var emailBodyReject = $"Halo, topup kamu gagal!\n" +
+                // $"Jumlah Top Up: Rp {formattedPrice}\n Silahkan untuk membuat invoice baru \n" +
+                // $"By Admin Beres\n";
 
-                            var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
-                            var result = await response.Content.ReadAsStringAsync();
-                            if (response.IsSuccessStatusCode)
-                            {
-                                BannerData.Status = item.Status;
-                                BannerData.Image = item.Image ?? BannerData.Image;
-                                await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
-                                return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
-                            }
-                            else
-                            {
-                                return $"Failed to send OTP. Response: {result}";
-                            }
-                        }
-                        else if (item.Status == "Selesai")
-                        {
-                            var form = new MultipartFormDataContent();
-                            form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
-                            form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
-                            form.Add(new StringContent(BannerData.IdUser ?? string.Empty), "to");
-                            form.Add(new StringContent(emailBodyAccept), "message");
+                // try
+                // {
+                //     using (var httpClient = new HttpClient())
+                //     {
+                //         if (item.Status == "Pending")
+                //         {
+                //             var form = new MultipartFormDataContent();
+                //             form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
+                //             form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
+                //             form.Add(new StringContent(phoneCS.Value ?? string.Empty), "to");
+                //             form.Add(new StringContent(emailBody), "message");
 
-                            var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
-                            var result = await response.Content.ReadAsStringAsync();
-                            if (response.IsSuccessStatusCode)
-                            {
-                                BannerData.Status = item.Status;
-                                BannerData.Image = item.Image ?? BannerData.Image;
-                                await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
-                                return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
-                            }
-                            else
-                            {
-                                return $"Failed to send OTP. Response: {result}";
-                            }
-                        }
-                        else
-                        {
-                            var form = new MultipartFormDataContent();
-                            form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
-                            form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
-                            form.Add(new StringContent(BannerData.IdUser ?? string.Empty), "to");
-                            form.Add(new StringContent(emailBodyReject), "message");
+                //             var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
+                //             var result = await response.Content.ReadAsStringAsync();
+                //             if (response.IsSuccessStatusCode)
+                //             {
+                //                 BannerData.Status = item.Status;
+                //                 BannerData.Image = item.Image ?? BannerData.Image;
+                //                 await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
+                //                 return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
+                //             }
+                //             else
+                //             {
+                //                 return $"Failed to send OTP. Response: {result}";
+                //             }
+                //         }
+                //         else if (item.Status == "Selesai")
+                //         {
+                //             var form = new MultipartFormDataContent();
+                //             form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
+                //             form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
+                //             form.Add(new StringContent(BannerData.IdUser ?? string.Empty), "to");
+                //             form.Add(new StringContent(emailBodyAccept), "message");
 
-                            var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
-                            var result = await response.Content.ReadAsStringAsync();
-                            if (response.IsSuccessStatusCode)
-                            {
-                                BannerData.Status = item.Status;
-                                BannerData.Image = item.Image ?? BannerData.Image;
-                                await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
-                                return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
-                            }
-                            else
-                            {
-                                return $"Failed to send OTP. Response: {result}";
-                            }
-                        }
-                    }
-                }
-                catch (CustomException)
-                {
-                    throw;
-                }
+                //             var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
+                //             var result = await response.Content.ReadAsStringAsync();
+                //             if (response.IsSuccessStatusCode)
+                //             {
+                //                 BannerData.Status = item.Status;
+                //                 BannerData.Image = item.Image ?? BannerData.Image;
+                //                 await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
+                //                 return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
+                //             }
+                //             else
+                //             {
+                //                 return $"Failed to send OTP. Response: {result}";
+                //             }
+                //         }
+                //         else
+                //         {
+                //             var form = new MultipartFormDataContent();
+                //             form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
+                //             form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
+                //             form.Add(new StringContent(BannerData.IdUser ?? string.Empty), "to");
+                //             form.Add(new StringContent(emailBodyReject), "message");
+
+                //             var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
+                //             var result = await response.Content.ReadAsStringAsync();
+                //             if (response.IsSuccessStatusCode)
+                //             {
+                //                 BannerData.Status = item.Status;
+                //                 BannerData.Image = item.Image ?? BannerData.Image;
+                //                 await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
+                //                 return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
+                //             }
+                //             else
+                //             {
+                //                 return $"Failed to send OTP. Response: {result}";
+                //             }
+                //         }
+                //     }
+                // }
+                // catch (CustomException)
+                // {
+                //     throw;
+                // }
+                BannerData.Status = item.Status;
+                BannerData.Image = item.Image ?? BannerData.Image;
+                await dataUser.ReplaceOneAsync(x => x.Id == item.Id, BannerData);
+                return new { code = 200, id = BannerData.Id.ToString(), message = "Data Updated" };
             }
             catch (CustomException)
             {
