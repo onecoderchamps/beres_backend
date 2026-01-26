@@ -99,7 +99,7 @@ namespace RepositoryPattern.Services.PatunganService
             }
         }
 
-        public async Task<object> GetbyID(string id, string idUser)
+        public async Task<object> GetbyID(string id, string Users)
         {
             try
             {
@@ -107,6 +107,9 @@ namespace RepositoryPattern.Services.PatunganService
                 var now = DateTime.Now;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+                var userObj = await User.Find(x => x.Id == Users).FirstOrDefaultAsync();
+                var idUser = userObj?.Phone;
 
                 // var result = new List<object>();
 
@@ -274,10 +277,13 @@ namespace RepositoryPattern.Services.PatunganService
             }
         }
 
-        public async Task<object> PayPatungan(CreatePaymentPatungan id, string idUser)
+        public async Task<object> PayPatungan(CreatePaymentPatungan id, string Users)
         {
             try
             {
+                var userObj = await User.Find(x => x.Id == Users).FirstOrDefaultAsync();
+                var idUser = userObj?.Phone;
+
                 var cekDbPatungan = await dataUser.Find(_ => _.Id == id.IdTransaksi).FirstOrDefaultAsync();
                 if (cekDbPatungan == null)
                 {
@@ -316,7 +322,7 @@ namespace RepositoryPattern.Services.PatunganService
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = idUser,
+                    IdUser = Users,
                     IdTransaksi = cekDbPatungan.Id,
                     Type = "Patungan",
                     Nominal = cekDbPatungan.TargetAmount * member.JumlahLot,
@@ -613,7 +619,7 @@ namespace RepositoryPattern.Services.PatunganService
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = idUser,
+                    IdUser = roleData.Id,
                     IdTransaksi = cekDbPatungan.Id,
                     Type = "Patungan",
                     Nominal = cekDbPatungan.TargetAmount * lot,

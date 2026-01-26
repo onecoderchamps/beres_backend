@@ -164,12 +164,15 @@ namespace RepositoryPattern.Services.AuthService
             }
         }
 
-        public async Task<object> UpdateProfile(string id, UpdateProfileDto item)
+        public async Task<object> UpdateProfile(string Users, UpdateProfileDto item)
         {
             try
             {
+                var userObj = await dataUser.Find(x => x.Id == Users).FirstOrDefaultAsync();
+                var id = userObj?.Phone;
+
                 var Bank = await Setting.Find(d => d.Key == "IuranTahunan").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
-                var roleData = await dataUser.Find(x => x.Phone == id).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data tidak ada");
+                var roleData = await dataUser.Find(x => x.Id == Users).FirstOrDefaultAsync() ?? throw new CustomException(400, "Error", "Data tidak ada");
                 if (roleData.Balance < Bank.Value)
                 {
                     throw new CustomException(400, "Error", "Saldo tidak cukup untuk melakukan pembayaran.");
@@ -181,7 +184,7 @@ namespace RepositoryPattern.Services.AuthService
 
                 var filter = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiTahunan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, Users),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfYear),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
                 );
@@ -195,7 +198,7 @@ namespace RepositoryPattern.Services.AuthService
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = roleData.Phone,
+                    IdUser = Users,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "KoperasiTahunan",
                     Nominal = Bank.Value,
@@ -279,7 +282,7 @@ namespace RepositoryPattern.Services.AuthService
 
                 var filter = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiTahunan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, id),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfYear),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfYear)
                 );
@@ -290,7 +293,7 @@ namespace RepositoryPattern.Services.AuthService
 
                 var filterBulanan = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiBulanan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, roleData.Phone),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, id),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonthPayed),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonthPayed)
                 );
