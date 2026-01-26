@@ -33,8 +33,8 @@ namespace RepositoryPattern.Services.OtpService
             {
                 await _otpCollection.DeleteOneAsync(o => o.Id == otps.Id);
             }
-            var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
-            var appConfig = await _settingCollection.Find(d => d.Key == "appKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+            // var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
+            var appConfig = await _settingCollection.Find(d => d.Key == "deviceId").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
 
             // Generate OTP baru
             var otpCode = new Random().Next(1000, 9999).ToString();
@@ -54,13 +54,21 @@ namespace RepositoryPattern.Services.OtpService
             {
                 using (var httpClient = new HttpClient())
                 {
-                    var form = new MultipartFormDataContent();
-                    form.Add(new StringContent(appConfig.Value ?? string.Empty), "appkey");
-                    form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
-                    form.Add(new StringContent(dto.Phonenumber), "to");
-                    form.Add(new StringContent($"Your code code is {otpCode}"), "message");
+                    // var form = new MultipartFormDataContent();
+                    // // form.Add(new StringContent(authConfig.Value ?? string.Empty), "authkey");
+                    // form.Add(new StringContent(appConfig.Value ?? string.Empty), "deviceId");
+                    // form.Add(new StringContent(dto.Phonenumber), "number");
+                    // form.Add(new StringContent($"Your code code is {otpCode}"), "message");
 
-                    var response = await httpClient.PostAsync("https://app.saungwa.com/api/create-message", form);
+                    // Prepare the form data as application/x-www-form-urlencoded
+                    var bodyForm = new FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("deviceId", appConfig.Value ?? string.Empty),
+                        new KeyValuePair<string, string>("number", dto.Phonenumber),
+                        new KeyValuePair<string, string>("message", $"Your OTP code is: {otpCode}")
+                    });
+
+                    var response = await httpClient.PostAsync("https://crm.woo-wa.com/send/message-text", bodyForm);
                     var result = await response.Content.ReadAsStringAsync();
 
                     if (response.IsSuccessStatusCode)
