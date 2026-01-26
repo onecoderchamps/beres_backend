@@ -184,11 +184,13 @@ namespace RepositoryPattern.Services.PatunganService
             }
         }
 
-        public async Task<Object> GetUser(string idUser)
+        public async Task<Object> GetUser(string Users)
         {
             try
             {
                 var items = await dataUser.Find(_ => _.IsActive == true).ToListAsync();
+                var userObj = await User.Find(x => x.Id == Users).FirstOrDefaultAsync();
+                var idUser = userObj?.Phone;
 
                 // Filter hanya Patungan yang memiliki member dengan IdUser yang sesuai
                 var filtered = items.Where(Patungan =>

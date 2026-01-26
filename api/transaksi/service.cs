@@ -124,7 +124,7 @@ namespace RepositoryPattern.Services.TransaksiService
                 var setting = await Setting.Find(d => d.Key == "IuranBulanan").FirstOrDefaultAsync()
                               ?? throw new CustomException(400, "Data", "Data not found");
 
-                var user = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
+                var user = await Users.Find(x => x.Id == idUser).FirstOrDefaultAsync();
                 if (user == null)
                     throw new CustomException(400, "Error", "Data User Not Found");
 
@@ -134,7 +134,7 @@ namespace RepositoryPattern.Services.TransaksiService
 
                 var filter = Builders<Transaksi>.Filter.And(
                     Builders<Transaksi>.Filter.Eq(_ => _.Type, "KoperasiBulanan"),
-                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, user.Phone),
+                    Builders<Transaksi>.Filter.Eq(_ => _.IdUser, user.Id),
                     Builders<Transaksi>.Filter.Gte(_ => _.CreatedAt, startOfMonth),
                     Builders<Transaksi>.Filter.Lte(_ => _.CreatedAt, endOfMonth)
                 );
@@ -148,12 +148,12 @@ namespace RepositoryPattern.Services.TransaksiService
                     throw new CustomException(400, "Error", "Saldo tidak mencukupi");
 
                 user.Balance -= nominal;
-                await Users.ReplaceOneAsync(x => x.Phone == idUser, user);
+                await Users.ReplaceOneAsync(x => x.Id == idUser, user);
 
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = user.Phone,
+                    IdUser = user.Id,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "KoperasiBulanan",
                     Nominal = nominal,
@@ -175,7 +175,7 @@ namespace RepositoryPattern.Services.TransaksiService
         {
             try
             {
-                var user = await Users.Find(x => x.Phone == idUser).FirstOrDefaultAsync();
+                var user = await Users.Find(x => x.Id == idUser).FirstOrDefaultAsync();
                 if (user == null)
                     throw new CustomException(400, "Error", "Data User Not Found");
 
@@ -184,12 +184,12 @@ namespace RepositoryPattern.Services.TransaksiService
                     throw new CustomException(400, "Error", "Saldo tidak mencukupi");
 
                 user.Balance -= nominal;
-                await Users.ReplaceOneAsync(x => x.Phone == idUser, user);
+                await Users.ReplaceOneAsync(x => x.Id == idUser, user);
 
                 var transaksi = new Transaksi
                 {
                     Id = Guid.NewGuid().ToString(),
-                    IdUser = user.Phone,
+                    IdUser = user.Id,
                     IdTransaksi = Guid.NewGuid().ToString(),
                     Type = "Sedekah",
                     Nominal = nominal,

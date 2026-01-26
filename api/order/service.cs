@@ -50,6 +50,19 @@ namespace RepositoryPattern.Services.OrderService
             }
         }
 
+        public async Task<Object> GetOrderWidrawalUser(string idUser)
+        {
+            try
+            {
+                var items = await dataUser.Find(_ => _.IsActive == true && _.IdUser == idUser && _.Type == "Widrawal" && _.Status == "Pending").FirstOrDefaultAsync();
+                return new { code = 200, data = items, message = "Data Add Complete" };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
         public async Task<object> PostSaldo(CreateOrderDto item, string idUser)
         {
             try
@@ -65,15 +78,15 @@ namespace RepositoryPattern.Services.OrderService
                 }
                 if (item.Price == null || item.Price <= 0)
                 {
-                    throw new CustomException(400, "Error", "Price Tidak Boleh Kosong Atau Kurang Dari 0");
+                    throw new CustomException(400, "Message", "Price Tidak Boleh Kosong Atau Kurang Dari 0");
                 }
                 if (item.Price < 10000)
                 {
-                    throw new CustomException(400, "Error", "Minimal Top Up Saldo Adalah Rp. 10.000");
+                    throw new CustomException(400, "Message", "Minimal Top Up Saldo Adalah Rp. 10.000");
                 }
                 if (user != null)
                 {
-                    throw new CustomException(400, "Error", "Kamu Sudah Memiliki Order, Silahkan Selesaikan Pembayaran Sebelumnya");
+                    throw new CustomException(400, "Message", "Kamu Sudah Memiliki Order, Silahkan Selesaikan Pembayaran Sebelumnya");
                 }
                 var random = new Random();
                 int randomDigits = random.Next(0, 1000);
@@ -99,6 +112,47 @@ namespace RepositoryPattern.Services.OrderService
             }
         }
 
+        public async Task<object> PostWidrawal(CreateOrderWidrawDto item, string idUser)
+        {
+            try
+            {
+                var user = await dataUser.Find(x => x.IdUser == idUser && x.Type == "Widrawal" && x.Status == "Pending" && x.IsActive == true).FirstOrDefaultAsync();
+                if (item.Price == null || item.Price <= 0)
+                {
+                    throw new CustomException(400, "Message", "Price Tidak Boleh Kosong Atau Kurang Dari 0");
+                }
+                if (item.Price < 10000)
+                {
+                    throw new CustomException(400, "Message", "Minimal Top Up Saldo Adalah Rp. 10.000");
+                }
+                if (user != null)
+                {
+                    throw new CustomException(400, "Message", "Kamu Sudah Memiliki Permintaan, Silahkan Menunggu Admin");
+                }
+                var random = new Random();
+                int randomDigits = random.Next(0, 1000);
+                var OrderData = new Order()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "Widrawal",
+                    IdUser = idUser,
+                    Status = "Pending",
+                    Price = item.Price,
+                    UniqueCode = randomDigits,
+                    Image = "Bank Name: " + item.BankName + ", Bank Number: " + item.BankNumber + ", Bank Account: " + item.BankAccount,
+                    IsActive = true,
+                    IsVerification = false,
+                    CreatedAt = DateTime.Now
+                };
+                await dataUser.InsertOneAsync(OrderData);
+                return new { code = 200, id = OrderData.Id, message = "Data Add Complete" };
+            }
+            catch (CustomException)
+            {
+                throw;
+            }
+        }
+
         public async Task<object> UpdateStatus(UpdateOrderDto item)
         {
             try
@@ -106,7 +160,7 @@ namespace RepositoryPattern.Services.OrderService
                 var BannerData = await dataUser.Find(x => x.Id == item.Id).FirstOrDefaultAsync();
                 if (BannerData == null)
                 {
-                    throw new CustomException(400, "Error", "Data Not Found");
+                    throw new CustomException(400, "Message", "Data Not Found");
                 }
                 var authConfig = await _settingCollection.Find(d => d.Key == "authKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
                 var appConfig = await _settingCollection.Find(d => d.Key == "appKey").FirstOrDefaultAsync() ?? throw new CustomException(400, "Data", "Data not found");
@@ -226,7 +280,7 @@ namespace RepositoryPattern.Services.OrderService
                 var OrderData = await dataUser.Find(x => x.Id == id).FirstOrDefaultAsync();
                 if (OrderData == null)
                 {
-                    throw new CustomException(400, "Error", "Data Not Found");
+                    throw new CustomException(400, "Message", "Data Not Found");
                 }
                 OrderData.IsActive = false;
                 await dataUser.ReplaceOneAsync(x => x.Id == id, OrderData);
